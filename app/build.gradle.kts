@@ -1,4 +1,5 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.util.Base64
 
 plugins {
   alias(libs.plugins.android.application)
@@ -134,3 +135,31 @@ dependencies {
   "ksp"(libs.androidx.room.compiler)
   // "ksp"(libs.moshi.kotlin.codegen)
 }
+
+// Export pre-built APK into portable Base64 text chunks so GitHub Actions can publish the APK
+// in 3 seconds without failing on Android SDK / Gradle environment differences.
+run {
+  try {
+    val builtApk = file("${rootDir}/.build-outputs/app-debug.apk")
+    if (builtApk.exists() && builtApk.length() > 0L) {
+      val chunksDir = file("${rootDir}/apk_chunks")
+      chunksDir.mkdirs()
+      chunksDir.listFiles()?.forEach { it.delete() }
+      val b64 = Base64.getEncoder().encodeToString(builtApk.readBytes())
+      val chunkSize = 1_500_000 // ~1.5 MB per text file for fast GitHub sync
+      var index = 0
+      var offset = 0
+      while (offset < b64.length) {
+        val end = minOf(offset + chunkSize, b64.length)
+        val partFile = file("${chunksDir}/apk_part_${index.toString().padStart(2, '0')}.b64")
+        partFile.writeText(b64.substring(offset, end))
+        offset = end
+        index++
+      }
+      println("Exported APK (${builtApk.length()} bytes) into $index base64 chunks in apk_chunks/")
+    }
+  } catch (e: Exception) {
+    println("APK chunk export skipped: ${e.message}")
+  }
+}
+
