@@ -1,0 +1,6 @@
+{
+  "name": "FunkinMods",
+  "description": "Browse, track, download, and manage the latest Friday Night Funkin rhythm game mods, tracklists, mechanics, and engines.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

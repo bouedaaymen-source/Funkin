@@ -1,0 +1,63 @@
+name: Build & Publish Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        if: ${{ !hashFiles('.build-outputs/app-debug.apk') }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        if: ${{ !hashFiles('.build-outputs/app-debug.apk') }}
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.9'
+
+      - name: Restore Debug Keystore & Build APK (if not pre-built)
+        if: ${{ !hashFiles('.build-outputs/app-debug.apk') }}
+        run: |
+          if [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          fi
+          gradle assembleDebug
+          mkdir -p .build-outputs
+          cp app/build/outputs/apk/debug/app-debug.apk .build-outputs/app-debug.apk
+
+      - name: Prepare Named APK for Download
+        run: |
+          cp .build-outputs/app-debug.apk FunkinMods-MarioMadness-V2.apk
+
+      - name: Upload APK as GitHub Actions Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FunkinMods-MarioMadness-V2-APK
+          path: FunkinMods-MarioMadness-V2.apk
+
+      - name: Publish APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.0-mmv2
+          name: "🍄 FunkinMods — Mario's Madness V2 Edition (Android APK)"
+          body: |
+            ### ⬇️ Direct Android APK Download
+            Tap **`FunkinMods-MarioMadness-V2.apk`** under **Assets** below to download and install the app on your Android device (works in Algeria and worldwide).
+          files: |
+            FunkinMods-MarioMadness-V2.apk
+            .build-outputs/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
