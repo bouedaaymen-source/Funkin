@@ -4,15 +4,20 @@
 
 ---
 
-## ⬇️ DIRECT ANDROID `.APK` DOWNLOAD
+## ⬇️ HOW TO DOWNLOAD THE `.APK` ON GITHUB
 
-Tap either link below on your Android phone to download and install the `.APK` directly (works in **Algeria** and worldwide):
+> **⚠️ IMPORTANT (Wait ~2 Minutes After Pushing):**
+> Google AI Studio only pushes source code to GitHub (it skips binary `.apk` files).
+> As soon as you push to GitHub, **GitHub Actions automatically compiles the `.APK` for you** (takes about **2 minutes**).
 
-### 👉 [**1. DIRECT DOWNLOAD APK (`app-debug.apk`)**](.build-outputs/app-debug.apk?raw=true)
-*(Tap the link above — or open `.build-outputs/app-debug.apk` in this repository and tap **"Download raw file"**)*
+### Step 1: Check Build Status (Wait for Green Checkmark ✅)
+👉 [**Click Here to Check the "Actions" Tab**](../../actions)
+- Wait until **"Build & Publish Android APK"** shows a green checkmark ✅ (~2 minutes).
 
-### 👉 [**2. DOWNLOAD FROM GITHUB RELEASES (`FunkinMods-MarioMadness-V2.apk`)**](../../releases/latest)
-*(Automatically published by GitHub Actions whenever you push to this repository)*
+### Step 2: Tap Either Link Below to Download the `.APK` Directly:
+1. 👉 [**⬇️ DIRECT DOWNLOAD APK FROM RELEASES (`FunkinMods-MarioMadness-V2.apk`)**](../../releases/latest/download/FunkinMods-MarioMadness-V2.apk)
+2. 👉 [**📦 OPEN RELEASES PAGE**](../../releases)
+3. 👉 [**📁 DIRECT REPO FILE (`FunkinMods-MarioMadness-V2.apk`)**](FunkinMods-MarioMadness-V2.apk?raw=true) *(Appears in repo root as soon as Step 1 finishes)*
 
 ---
 
