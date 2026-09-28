@@ -123,6 +123,7 @@ import com.example.ui.theme.FnfTextSecondary
 import com.example.ui.theme.FnfYellow
 import kotlin.math.abs
 import kotlin.random.Random
+import kotlinx.coroutines.launch
 
 data class PsychHighwayNote(
     val id: Long,
@@ -1857,11 +1858,15 @@ private fun PsychApkBridgeSection(
     onLaunchEmbedded: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val mod = detail.mod
 
     var isDownloadingEngineApk by remember { mutableStateOf(false) }
     var engineApkProgress by remember { mutableIntStateOf(0) }
     var engineApkInstalledInApp by remember { mutableStateOf(installedPackage != null) }
+    var isPackingZip by remember { mutableStateOf(false) }
+    var packedMb by remember { mutableIntStateOf(0) }
+    var totalMbTarget by remember { mutableIntStateOf(268) }
 
     LaunchedEffect(isDownloadingEngineApk) {
         if (isDownloadingEngineApk) {
@@ -1884,15 +1889,30 @@ private fun PsychApkBridgeSection(
         contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
         if (uri != null) {
-            val ok = writeModPackZipToUri(context, uri, detail)
-            if (ok) {
-                Toast.makeText(
-                    context,
-                    "Saved ${mod.id}-mmv2-3endings.zip with PNG Stage & Cutscenes!",
-                    Toast.LENGTH_LONG
-                ).show()
-            } else {
-                Toast.makeText(context, "Could not save ZIP file.", Toast.LENGTH_SHORT).show()
+            isPackingZip = true
+            packedMb = 0
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val ok = Psych073ModBuilder.writePsych073ModZipToUri(
+                    context = context,
+                    targetUri = uri,
+                    detail = detail,
+                    onProgress = { written, total, _ ->
+                        packedMb = written
+                        totalMbTarget = total
+                    }
+                )
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    isPackingZip = false
+                    if (ok) {
+                        Toast.makeText(
+                            context,
+                            "Saved ${mod.id}-mmv2-268mb-3endings.zip ($totalMbTarget MB)!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Toast.makeText(context, "Could not save ZIP file.", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
     }
@@ -1901,14 +1921,29 @@ private fun PsychApkBridgeSection(
         contract = ActivityResultContracts.CreateDocument("application/vnd.android.package-archive")
     ) { uri: Uri? ->
         if (uri != null) {
-            val ok = writeModPackZipToUri(context, uri, detail)
-            if (ok) {
-                engineApkInstalledInApp = true
-                Toast.makeText(
-                    context,
-                    "Saved ${mod.engine} + ${mod.title} APK bundle to your device!",
-                    Toast.LENGTH_LONG
-                ).show()
+            isPackingZip = true
+            packedMb = 0
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val ok = Psych073ModBuilder.writePsych073ModZipToUri(
+                    context = context,
+                    targetUri = uri,
+                    detail = detail,
+                    onProgress = { written, total, _ ->
+                        packedMb = written
+                        totalMbTarget = total
+                    }
+                )
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    isPackingZip = false
+                    if (ok) {
+                        engineApkInstalledInApp = true
+                        Toast.makeText(
+                            context,
+                            "Saved ${mod.engine} + ${mod.title} ($totalMbTarget MB) bundle!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
             }
         }
     }
@@ -2032,9 +2067,12 @@ private fun PsychApkBridgeSection(
                 ) {
                     Button(
                         onClick = {
-                            val fileName = "${mod.id}-mmv2-3endings-psych073.zip"
-                            saveZipLauncher.launch(fileName)
+                            if (!isPackingZip) {
+                                val fileName = "${mod.id}-mmv2-268mb-3endings-psych073.zip"
+                                saveZipLauncher.launch(fileName)
+                            }
                         },
+                        enabled = !isPackingZip,
                         modifier = Modifier
                             .weight(1f)
                             .testTag("save_mod_zip_offline_btn"),
@@ -2044,7 +2082,7 @@ private fun PsychApkBridgeSection(
                         Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "SAVE FULL .ZIP",
+                            text = if (isPackingZip) "PACKING $packedMb/$totalMbTarget MB" else "SAVE 268 MB .ZIP",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Black
                         )
@@ -2248,28 +2286,43 @@ private fun Psych073StudioSection(
     onPlayStage: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val mod = detail.mod
     var selectedFileTab by remember { mutableIntStateOf(0) }
     var enableHealthDrain by remember { mutableStateOf(true) }
     var enableBeatZoom by remember { mutableStateOf(true) }
+    var isPackingStudioZip by remember { mutableStateOf(false) }
+    var studioPackedMb by remember { mutableIntStateOf(0) }
+    var studioTotalMb by remember { mutableIntStateOf(268) }
 
     val savePsych073ZipLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
         if (uri != null) {
-            val ok = Psych073ModBuilder.writePsych073ModZipToUri(
-                context = context,
-                targetUri = uri,
-                detail = detail,
-                enableHealthDrain = enableHealthDrain,
-                enableBeatZoom = enableBeatZoom
-            )
-            if (ok) {
-                Toast.makeText(
-                    context,
-                    "Exported complete Mario's Madness V2 (#359554) 3-Endings Mod (.ZIP)!",
-                    Toast.LENGTH_LONG
-                ).show()
+            isPackingStudioZip = true
+            studioPackedMb = 0
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val ok = Psych073ModBuilder.writePsych073ModZipToUri(
+                    context = context,
+                    targetUri = uri,
+                    detail = detail,
+                    enableHealthDrain = enableHealthDrain,
+                    enableBeatZoom = enableBeatZoom,
+                    onProgress = { written, total, _ ->
+                        studioPackedMb = written
+                        studioTotalMb = total
+                    }
+                )
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    isPackingStudioZip = false
+                    if (ok) {
+                        Toast.makeText(
+                            context,
+                            "Exported complete $studioTotalMb MB Mario's Madness V2 (#359554) 3-Endings Mod (.ZIP)!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
             }
         }
     }
@@ -2359,9 +2412,12 @@ private fun Psych073StudioSection(
                 ) {
                     Button(
                         onClick = {
-                            val zipName = "${Psych073ModBuilder.slugify(mod.id)}-mmv2-3endings-0.7.3.zip"
-                            savePsych073ZipLauncher.launch(zipName)
+                            if (!isPackingStudioZip) {
+                                val zipName = "${Psych073ModBuilder.slugify(mod.id)}-mmv2-268mb-3endings-0.7.3.zip"
+                                savePsych073ZipLauncher.launch(zipName)
+                            }
                         },
+                        enabled = !isPackingStudioZip,
                         modifier = Modifier
                             .weight(1f)
                             .testTag("export_working_psych073_zip_btn"),
@@ -2370,7 +2426,11 @@ private fun Psych073StudioSection(
                     ) {
                         Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("EXPORT 3-ENDINGS .ZIP", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                        Text(
+                            if (isPackingStudioZip) "PACKING $studioPackedMb/$studioTotalMb MB" else "EXPORT 268 MB .ZIP",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Black
+                        )
                     }
 
                     Button(

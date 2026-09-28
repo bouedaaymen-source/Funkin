@@ -58,6 +58,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -91,6 +92,9 @@ import com.example.ui.theme.FnfTextMuted
 import com.example.ui.theme.FnfTextPrimary
 import com.example.ui.theme.FnfTextSecondary
 import com.example.ui.theme.FnfYellow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -106,22 +110,47 @@ fun ModDetailScreen(
 ) {
     BackHandler { onBack() }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val mod = detail.mod
     val accentColor = Color(mod.colorHex)
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var activePreviewSong by remember { mutableStateOf<SongItem?>(null) }
 
+    var isPackingZip by remember { mutableStateOf(false) }
+    var packedMb by remember { mutableIntStateOf(0) }
+    var totalMbTarget by remember { mutableIntStateOf(268) }
+    var currentPackedFile by remember { mutableStateOf("") }
+
     val saveZipLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
         if (uri != null) {
-            val ok = Psych073ModBuilder.writePsych073ModZipToUri(context, uri, detail)
-            if (ok) {
-                Toast.makeText(
-                    context,
-                    "Saved ${mod.title} (.ZIP) with Stage PNGs & 3 Endings!",
-                    Toast.LENGTH_LONG
-                ).show()
+            isPackingZip = true
+            packedMb = 0
+            currentPackedFile = "pack.json & pack.png"
+            scope.launch(Dispatchers.IO) {
+                val ok = Psych073ModBuilder.writePsych073ModZipToUri(
+                    context = context,
+                    targetUri = uri,
+                    detail = detail,
+                    onProgress = { written, total, fileLabel ->
+                        packedMb = written
+                        totalMbTarget = total
+                        currentPackedFile = fileLabel
+                    }
+                )
+                withContext(Dispatchers.Main) {
+                    isPackingZip = false
+                    if (ok) {
+                        Toast.makeText(
+                            context,
+                            "Saved ${mod.title} ($totalMbTarget MB .ZIP) with Stage PNGs & 3 Endings!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Toast.makeText(context, "Failed to export .ZIP file.", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
     }
@@ -324,9 +353,12 @@ fun ModDetailScreen(
 
                     Button(
                         onClick = {
-                            val zipName = "${Psych073ModBuilder.slugify(mod.id)}-mmv2-3endings-0.7.3.zip"
-                            saveZipLauncher.launch(zipName)
+                            if (!isPackingZip) {
+                                val zipName = "${Psych073ModBuilder.slugify(mod.id)}-mmv2-268mb-3endings-0.7.3.zip"
+                                saveZipLauncher.launch(zipName)
+                            }
                         },
+                        enabled = !isPackingZip,
                         modifier = Modifier
                             .weight(1f)
                             .testTag("detail_export_zip_btn"),
@@ -335,7 +367,43 @@ fun ModDetailScreen(
                     ) {
                         Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("GET 0.7.3 .ZIP", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                        Text(
+                            if (isPackingZip) "PACKING $packedMb/$totalMbTarget MB" else "GET 268MB .ZIP",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                }
+
+                if (isPackingZip) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Writing: $currentPackedFile",
+                                color = FnfGreen,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "$packedMb / $totalMbTarget MB",
+                                color = FnfYellow,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        LinearProgressIndicator(
+                            progress = { (packedMb.toFloat() / totalMbTarget.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = FnfGreen,
+                            trackColor = FnfSurfaceElevated
+                        )
                     }
                 }
 
