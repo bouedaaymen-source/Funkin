@@ -2,10 +2,12 @@ package com.example.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,16 +31,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -51,9 +50,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -64,14 +64,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.DownloadStatus
 import com.example.data.model.FullModDetail
 import com.example.data.model.SongItem
+import com.example.data.psych.MarioMadnessAudioEngine
+import com.example.data.psych.Psych073ModBuilder
 import com.example.ui.theme.FnfBorder
 import com.example.ui.theme.FnfCyan
 import com.example.ui.theme.FnfDarkBg
@@ -104,9 +109,46 @@ fun ModDetailScreen(
     val mod = detail.mod
     val accentColor = Color(mod.colorHex)
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    var activePreviewSong by remember { mutableStateOf<String?>(null) }
+    var activePreviewSong by remember { mutableStateOf<SongItem?>(null) }
 
-    val tabs = listOf("Overview", "Tracklist (${mod.songs.size})", "Cast", "My Tracker")
+    val saveZipLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val ok = Psych073ModBuilder.writePsych073ModZipToUri(context, uri, detail)
+            if (ok) {
+                Toast.makeText(
+                    context,
+                    "Saved ${mod.title} (.ZIP) with Stage PNGs & 3 Endings!",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    // Play live Mario's Madness V2 audio when previewing a track in Tracklist
+    LaunchedEffect(activePreviewSong) {
+        val song = activePreviewSong
+        if (song != null) {
+            MarioMadnessAudioEngine.startStageMusic(
+                scope = this,
+                songTitle = song.title,
+                bpm = song.bpm,
+                getAct = { 1 },
+                isAudioEnabled = { true }
+            )
+        } else {
+            MarioMadnessAudioEngine.stopStageMusic()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            MarioMadnessAudioEngine.stopStageMusic()
+        }
+    }
+
+    val tabs = listOf("Overview & 3 Endings", "Tracklist (${mod.songs.size})", "Cast", "My Tracker")
 
     Column(
         modifier = modifier
@@ -125,7 +167,7 @@ fun ModDetailScreen(
                         )
                     )
                 )
-                .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 12.dp)
+                .padding(top = 14.dp, start = 16.dp, end = 16.dp, bottom = 10.dp)
         ) {
             Column {
                 Row(
@@ -148,10 +190,9 @@ fun ModDetailScreen(
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // Open External Link
                         IconButton(
                             onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mod.downloadUrl))
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mod.mirrorUrl.ifBlank { mod.downloadUrl }))
                                 context.startActivity(intent)
                             },
                             modifier = Modifier
@@ -160,12 +201,11 @@ fun ModDetailScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.OpenInBrowser,
-                                contentDescription = "Open Web Download Link",
+                                contentDescription = "Open GameBanana Mod Page",
                                 tint = FnfCyan
                             )
                         }
 
-                        // Bookmark / Favorite
                         IconButton(
                             onClick = onFavoriteToggle,
                             modifier = Modifier
@@ -182,9 +222,8 @@ fun ModDetailScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Title & Author
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -197,7 +236,21 @@ fun ModDetailScreen(
                         Text(
                             text = mod.category.uppercase(),
                             color = accentColor,
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = FnfYellow.copy(alpha = 0.2f),
+                        border = BorderStroke(1.dp, FnfYellow)
+                    ) {
+                        Text(
+                            text = "3 PLAYABLE ENDINGS",
+                            color = FnfYellow,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Black,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
@@ -206,7 +259,7 @@ fun ModDetailScreen(
                     Text(
                         text = mod.version,
                         color = FnfTextMuted,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -216,23 +269,22 @@ fun ModDetailScreen(
                 Text(
                     text = mod.title,
                     color = FnfTextPrimary,
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Black
                 )
 
                 Text(
                     text = "By ${mod.author}",
                     color = FnfCyan,
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Metadata chips
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     MetaPill(label = "Engine", value = mod.engine.take(14))
                     MetaPill(label = "Size", value = mod.downloadSize)
@@ -242,13 +294,51 @@ fun ModDetailScreen(
             }
         }
 
-        // Action CTA Bar: Download button & Log score
+        // Action CTA Bar: Instant Play 5 Acts & 3 Endings + Download .ZIP
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = FnfSurface,
             border = BorderStroke(1.dp, FnfBorder)
         ) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Always-visible Play Stage & 3 Endings Button + Direct .ZIP Export
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onLaunchPsychEngine,
+                        modifier = Modifier
+                            .weight(1.35f)
+                            .testTag("launch_psych_detail_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = FnfRed, contentColor = Color.White)
+                    ) {
+                        Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("PLAY STAGE & 3 ENDINGS", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                    }
+
+                    Button(
+                        onClick = {
+                            val zipName = "${Psych073ModBuilder.slugify(mod.id)}-mmv2-3endings-0.7.3.zip"
+                            saveZipLauncher.launch(zipName)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("detail_export_zip_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = FnfGreen, contentColor = FnfDarkBg)
+                    ) {
+                        Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("GET 0.7.3 .ZIP", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                    }
+                }
+
                 when (detail.downloadStatus) {
                     DownloadStatus.DOWNLOADING -> {
                         Column(modifier = Modifier.fillMaxWidth()) {
@@ -258,9 +348,9 @@ fun ModDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "DOWNLOADING... ${detail.downloadProgress}%",
+                                    text = "INSTALLING TO VAULT... ${detail.downloadProgress}%",
                                     color = FnfCyan,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Black
                                 )
                                 OutlinedButton(
@@ -269,15 +359,15 @@ fun ModDetailScreen(
                                     colors = ButtonDefaults.outlinedButtonColors(contentColor = FnfRed),
                                     border = BorderStroke(1.dp, FnfRed)
                                 ) {
-                                    Text("CANCEL", fontSize = 11.sp)
+                                    Text("CANCEL", fontSize = 10.sp)
                                 }
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             LinearProgressIndicator(
                                 progress = { detail.downloadProgress / 100f },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(8.dp)
+                                    .height(6.dp)
                                     .clip(RoundedCornerShape(4.dp)),
                                 color = FnfCyan,
                                 trackColor = FnfSurfaceElevated
@@ -285,48 +375,30 @@ fun ModDetailScreen(
                         }
                     }
                     DownloadStatus.DOWNLOADED -> {
-                        Column(
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Button(
-                                onClick = onLaunchPsychEngine,
+                                onClick = onOpenLogScore,
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .testTag("launch_psych_detail_btn"),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = FnfRed, contentColor = Color.White)
+                                    .weight(1f)
+                                    .testTag("log_score_cta_btn"),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = FnfCyan, contentColor = FnfDarkBg)
                             ) {
-                                Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("PLAY IN ${mod.engine.uppercase()} (STABLE APK)", fontWeight = FontWeight.Black)
+                                Text("LOG SCORE & NOTES", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            OutlinedButton(
+                                onClick = onCancelDownload,
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, FnfBorder),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = FnfTextMuted)
                             ) {
-                                Button(
-                                    onClick = onOpenLogScore,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .testTag("log_score_cta_btn"),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = FnfGreen, contentColor = FnfDarkBg)
-                                ) {
-                                    Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("LOG SCORE & NOTES", fontWeight = FontWeight.Bold)
-                                }
-
-                                OutlinedButton(
-                                    onClick = onCancelDownload,
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, FnfBorder),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = FnfTextMuted)
-                                ) {
-                                    Text("REMOVE")
-                                }
+                                Text("REMOVE", fontSize = 11.sp)
                             }
                         }
                     }
@@ -335,23 +407,24 @@ fun ModDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Button(
+                            OutlinedButton(
                                 onClick = onStartDownload,
                                 modifier = Modifier
-                                    .weight(1.3f)
+                                    .weight(1f)
                                     .testTag("start_download_cta_btn"),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = FnfCyan, contentColor = FnfDarkBg)
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, FnfCyan),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = FnfCyan)
                             ) {
-                                Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("DOWNLOAD & INSTALL", fontWeight = FontWeight.Black)
+                                Text("MOUNT IN VAULT", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
 
                             OutlinedButton(
                                 onClick = onOpenLogScore,
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 border = BorderStroke(1.dp, FnfBorder),
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = FnfPink)
                             ) {
@@ -377,7 +450,7 @@ fun ModDetailScreen(
                     text = {
                         Text(
                             text = title,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal,
                             color = if (selectedTabIndex == index) FnfCyan else FnfTextSecondary
                         )
@@ -394,12 +467,12 @@ fun ModDetailScreen(
                 .padding(16.dp)
         ) {
             when (selectedTabIndex) {
-                0 -> OverviewTab(mod = mod)
+                0 -> OverviewTab(mod = mod, onLaunchStage = onLaunchPsychEngine)
                 1 -> TracklistTab(
                     songs = mod.songs,
-                    activePreviewSong = activePreviewSong,
-                    onTogglePreview = { songTitle ->
-                        activePreviewSong = if (activePreviewSong == songTitle) null else songTitle
+                    activePreviewSong = activePreviewSong?.title,
+                    onTogglePreview = { song ->
+                        activePreviewSong = if (activePreviewSong?.title == song.title) null else song
                     }
                 )
                 2 -> CharactersTab(characters = mod.characters)
@@ -412,8 +485,84 @@ fun ModDetailScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun OverviewTab(mod: com.example.data.model.FnfMod) {
+private fun OverviewTab(
+    mod: com.example.data.model.FnfMod,
+    onLaunchStage: () -> Unit
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
+        // 3 Branching Endings Visual Showcase Card
+        Text(
+            text = "3 PLAYABLE ENDINGS & CUTSCENES (MARIO'S MADNESS V2 #359554)",
+            color = FnfYellow,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Black
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val endingCards = listOf(
+            Triple(
+                "ENDING 1: CANON BAD ENDING ('ALL-STARS')",
+                "Ultra M traps BF & GF inside the NES cartridge ('SEE YOU NEXT TIME'). Triggered when Starman Notes < 3 & low health.",
+                R.drawable.img_mmv2_ending_bad_1790591028072 to FnfRed
+            ),
+            Triple(
+                "ENDING 2: BITTERSWEET ESCAPE ('SHATTERED CRT')",
+                "Pico & Beta Luigi hold off MX & Ultra M at the Warp Pipe while BF & GF leap through the TV screen and smash the cartridge!",
+                R.drawable.mmv2_ending_escape_1790592490896 to FnfGreen
+            ),
+            Triple(
+                "ENDING 3: SECRET EXIT TRUE ENDING ('GOLDEN STARMAN')",
+                "Collect 3+ Golden Starman Notes (★) across Acts 1–5 to awaken Starman BF & GF, defeat Ultra M, and unlock the Golden Keyhole!",
+                R.drawable.img_mmv2_ending_true_1790591037564 to FnfYellow
+            )
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            endingCards.forEach { (title, desc, imgAndColor) ->
+                val (resId, borderCol) = imgAndColor
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = FnfSurface),
+                    border = BorderStroke(1.5.dp, borderCol),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onLaunchStage() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = resId),
+                            contentDescription = title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(width = 96.dp, height = 68.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = title,
+                                color = borderCol,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text(
+                                text = desc,
+                                color = FnfTextSecondary,
+                                fontSize = 11.sp,
+                                lineHeight = 15.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
         Text(
             text = "SYNOPSIS & STORY LORE",
             color = FnfCyan,
@@ -452,7 +601,6 @@ private fun OverviewTab(mod: com.example.data.model.FnfMod) {
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // Unique Mechanics
         Text(
             text = "CUSTOM GAMEPLAY MECHANICS",
             color = FnfPink,
@@ -492,7 +640,6 @@ private fun OverviewTab(mod: com.example.data.model.FnfMod) {
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // Supported Platforms
         Text(
             text = "SUPPORTED PLATFORMS",
             color = FnfGreen,
@@ -527,13 +674,13 @@ private fun OverviewTab(mod: com.example.data.model.FnfMod) {
 private fun TracklistTab(
     songs: List<SongItem>,
     activePreviewSong: String?,
-    onTogglePreview: (String) -> Unit
+    onTogglePreview: (SongItem) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "FULL TRACKLIST & CHARTS (${songs.size} SONGS)",
+            text = "FULL MARIO'S MADNESS V2 TRACKLIST (${songs.size} SONGS • TAP PLAY FOR LIVE SYNTH)",
             color = FnfCyan,
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Black
         )
         Spacer(modifier = Modifier.height(10.dp))
@@ -603,7 +750,6 @@ private fun TracklistTab(
                             }
                         }
 
-                        // Difficulty Tag
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = when (song.difficultyLevel.lowercase()) {
@@ -627,16 +773,15 @@ private fun TracklistTab(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        // Beat preview toggle button
                         IconButton(
-                            onClick = { onTogglePreview(song.title) },
+                            onClick = { onTogglePreview(song) },
                             modifier = Modifier
                                 .size(36.dp)
                                 .background(if (isPlaying) FnfCyan.copy(alpha = 0.2f) else FnfSurfaceElevated, CircleShape)
                         ) {
                             Icon(
                                 imageVector = if (isPlaying) Icons.Filled.GraphicEq else Icons.Filled.PlayArrow,
-                                contentDescription = "Preview Beat",
+                                contentDescription = "Preview Song",
                                 tint = if (isPlaying) FnfCyan else FnfTextSecondary,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -752,14 +897,12 @@ private fun PersonalTrackerTab(detail: FullModDetail, onEditClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Progress Card
         Card(
             shape = RoundedCornerShape(14.dp),
             colors = CardDefaults.cardColors(containerColor = FnfSurface),
             border = BorderStroke(1.dp, FnfBorder)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // Stars & Rating
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -787,7 +930,6 @@ private fun PersonalTrackerTab(detail: FullModDetail, onEditClick: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // High score
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -804,7 +946,6 @@ private fun PersonalTrackerTab(detail: FullModDetail, onEditClick: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Completed status
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,

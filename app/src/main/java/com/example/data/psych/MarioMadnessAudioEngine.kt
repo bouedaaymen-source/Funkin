@@ -12,8 +12,9 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * Real-time PCM 16-bit 44.1kHz Audio Synthesizer for Mario's Madness V2 & Secret Exit songs.
- * Plays recognizable dark NES/SNES Mario's Madness melodies, basslines, drums, and FNF Boyfriend/Ultra M vocal notes.
+ * Real-time PCM 16-bit Audio Synthesizer for Mario's Madness V2 (GameBanana #359554) & Secret Exit.
+ * Synthesizes recognizable dark NES/SNES Mario's Madness melodies, basslines, chiptune drums,
+ * opponent/BF vocal duet harmonies, and the 3 Ending Cutscene themes.
  */
 object MarioMadnessAudioEngine {
 
@@ -21,7 +22,7 @@ object MarioMadnessAudioEngine {
     private var musicJob: Job? = null
     private var audioTrack: AudioTrack? = null
 
-    // Recognizable Mario's Madness V2 / Dark Mushroom Kingdom MIDI motifs
+    // Recognizable Mario's Madness V2 (GameBanana #359554) MIDI motifs
     private val melodyMotifs: Map<String, IntArray> = mapOf(
         // Secret Exit (5-Act Finale: Dark Castle -> Starman Liberation Anthem)
         "secret-exit" to intArrayOf(
@@ -59,6 +60,36 @@ object MarioMadnessAudioEngine {
         "i-hate-you" to intArrayOf(
             59, 62, 66, 71, 70, 66, 62, 59, 64, 67, 71, 76, 74, 71, 67, 64,
             66, 69, 73, 78, 76, 73, 69, 66, 71, 0, 70, 71, 74, 71, 66, 59
+        ),
+        // Powerdown & Demise (MX Underground 1-2 Heavy Bass & Lead)
+        "mx-demise" to intArrayOf(
+            48, 60, 51, 63, 50, 62, 49, 61, 48, 60, 54, 66, 53, 65, 51, 63,
+            60, 72, 63, 75, 62, 74, 61, 73, 60, 72, 66, 78, 65, 77, 63, 75
+        ),
+        // Overdue & Alone (Luigi's Mansion / Mr. L Haunting Waltz)
+        "overdue" to intArrayOf(
+            64, 0, 67, 71, 72, 0, 71, 67, 66, 0, 69, 72, 71, 0, 67, 64,
+            60, 0, 64, 67, 69, 0, 67, 64, 59, 0, 63, 66, 64, 0, 59, 0
+        ),
+        // Golden Land & No Party (GameBoy / Anti-Piracy Screen)
+        "golden-land" to intArrayOf(
+            67, 70, 74, 79, 78, 74, 70, 67, 63, 67, 70, 75, 74, 70, 67, 62,
+            60, 63, 67, 72, 70, 67, 63, 60, 62, 66, 69, 74, 70, 67, 62, 0
+        ),
+        // Ending 1: Canon Bad Ending ("SEE YOU NEXT TIME" Music Box)
+        "ending-bad" to intArrayOf(
+            64, 0, 60, 0, 57, 0, 56, 0, 53, 0, 52, 0, 48, 0, 45, 0,
+            57, 0, 60, 0, 64, 0, 63, 0, 60, 0, 56, 0, 57, 0, 0, 0
+        ),
+        // Ending 2: Warp Pipe Escape ("SHATTERED CRT" Urgent Synth)
+        "ending-escape" to intArrayOf(
+            62, 65, 69, 74, 72, 69, 65, 62, 64, 67, 71, 76, 74, 71, 67, 64,
+            65, 69, 72, 77, 76, 72, 69, 65, 67, 71, 74, 79, 76, 72, 69, 64
+        ),
+        // Ending 3: Secret Exit True Ending ("GOLDEN STARMAN" Victory Fanfare)
+        "ending-true" to intArrayOf(
+            60, 64, 67, 72, 72, 76, 79, 84, 65, 69, 72, 77, 77, 81, 84, 89,
+            67, 71, 74, 79, 79, 83, 86, 91, 72, 0, 76, 79, 84, 0, 84, 0
         )
     )
 
@@ -67,16 +98,22 @@ object MarioMadnessAudioEngine {
         return 440.0 * Math.pow(2.0, (midi - 69.0) / 12.0)
     }
 
-    private fun resolveMotif(songTitle: String): IntArray {
+    fun resolveMotif(songTitle: String): IntArray {
         val slug = songTitle.lowercase()
         return when {
+            slug.contains("ending-bad") -> melodyMotifs["ending-bad"]!!
+            slug.contains("ending-escape") -> melodyMotifs["ending-escape"]!!
+            slug.contains("ending-true") -> melodyMotifs["ending-true"]!!
             slug.contains("secret") || slug.contains("exit") -> melodyMotifs["secret-exit"]!!
             slug.contains("all-star") || slug.contains("all star") -> melodyMotifs["all-stars"]!!
             slug.contains("its-a-me") || slug.contains("it's-a-me") -> melodyMotifs["its-a-me"]!!
-            slug.contains("starman") || slug.contains("slaughter") -> melodyMotifs["starman-slaughter"]!!
+            slug.contains("starman") || slug.contains("slaughter") || slug.contains("no hope") -> melodyMotifs["starman-slaughter"]!!
             slug.contains("paranoia") || slug.contains("virtual") -> melodyMotifs["paranoia"]!!
-            slug.contains("unbeatable") || slug.contains("nintendo") -> melodyMotifs["unbeatable"]!!
-            slug.contains("hate") || slug.contains("luigi") || slug.contains("overdue") -> melodyMotifs["i-hate-you"]!!
+            slug.contains("unbeatable") || slug.contains("nintendo") || slug.contains("dictator") || slug.contains("race") -> melodyMotifs["unbeatable"]!!
+            slug.contains("powerdown") || slug.contains("demise") || slug.contains("mx") || slug.contains("apparition") -> melodyMotifs["mx-demise"]!!
+            slug.contains("overdue") || slug.contains("alone") || slug.contains("abandoned") || slug.contains("end") -> melodyMotifs["overdue"]!!
+            slug.contains("golden") || slug.contains("party") || slug.contains("bad day") || slug.contains("cool") -> melodyMotifs["golden-land"]!!
+            slug.contains("hate") || slug.contains("luigi") || slug.contains("god") -> melodyMotifs["i-hate-you"]!!
             else -> melodyMotifs["secret-exit"]!!
         }
     }
@@ -93,7 +130,7 @@ object MarioMadnessAudioEngine {
     ) {
         stopStageMusic()
         val motif = resolveMotif(songTitle)
-        val safeBpm = bpm.coerceIn(110, 230)
+        val safeBpm = bpm.coerceIn(100, 230)
         val stepDurationSec = (60.0 / safeBpm) / 2.0 // 8th-note steps
         val samplesPerStep = (SAMPLE_RATE * stepDurationSec).toInt().coerceAtLeast(1024)
 
@@ -142,7 +179,6 @@ object MarioMadnessAudioEngine {
                     }
 
                     val act = getAct().coerceIn(1, 5)
-                    // Shift key up in Act 4 & 5 (Starman powerup)
                     val transpose = when (act) {
                         2 -> -2
                         3 -> 2

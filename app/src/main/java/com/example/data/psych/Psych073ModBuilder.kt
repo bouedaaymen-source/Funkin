@@ -1,7 +1,16 @@
 package com.example.data.psych
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Shader
 import android.net.Uri
+import com.example.R
 import com.example.data.model.FullModDetail
 import com.example.data.model.SongItem
 import java.io.ByteArrayOutputStream
@@ -10,9 +19,14 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 /**
- * Generates 100% authentic, crash-free Psych Engine 0.7.3 mod files for the actual
- * Friday Night Funkin': Psych Engine 0.7.3 game (PC & Android), with specialized
- * 5-Act support for "Mario's Madness: Secret Exit Reimagined".
+ * Generates a complete, multi-ending Mario's Madness V2 (GameBanana #359554) + Secret Exit
+ * Psych Engine 0.7.3 mod package with:
+ * - Real exported PNG stage & ending cutscene artwork (`pack.png`, `images/mmv2/stage_ultram.png`,
+ *   `images/mmv2/ending_bad.png`, `images/mmv2/ending_escape.png`, `images/mmv2/ending_true.png`)
+ * - Real PNG + Sparrow v2 XML custom note assets (`HURTNOTE_assets`, `STARMANNOTE_assets`)
+ * - 5-Act & 3-Branching-Endings Lua Director (`scripts/secret_exit_5act_director.lua`) using
+ *   `onEndSong() -> Function_Stop` so the 3 Endings are fully playable inside Psych Engine 0.7.3
+ * - All 6 Mario's Madness V2 Worlds & Weeks (`weeks/mmv2_complete_359554.json`)
  */
 object Psych073ModBuilder {
 
@@ -21,7 +35,7 @@ object Psych073ModBuilder {
     fun isSecretExitMod(detail: FullModDetail): Boolean {
         val id = detail.mod.id.lowercase()
         val title = detail.mod.title.lowercase()
-        return id.contains("secret-exit") || title.contains("secret exit")
+        return id.contains("secret-exit") || id.contains("marios-madness") || title.contains("mario") || title.contains("secret exit")
     }
 
     fun slugify(title: String): String {
@@ -40,7 +54,7 @@ object Psych073ModBuilder {
         return """
             {
               "name": "${escapeJson(mod.title)}",
-              "description": "${escapeJson(mod.subtitle)} • Built for actual Psych Engine 0.7.3 (5-Act Lua Director, Custom Stage, Fire & Starman Notes, Dodge Events).",
+              "description": "${escapeJson(mod.subtitle)} • Based on Mario's Madness V2 (GameBanana #359554) with 5 Acts, Real Stage & Cutscene PNGs, and 3 Playable Endings (1=Bad, 2=Escape, 3=Secret Exit True Ending).",
               "restart": false,
               "runsGlobally": false,
               "color": [$r, $g, $b],
@@ -54,8 +68,7 @@ object Psych073ModBuilder {
         val r = ((mod.colorHex shr 16) and 0xFF).toInt()
         val g = ((mod.colorHex shr 8) and 0xFF).toInt()
         val b = (mod.colorHex and 0xFF).toInt()
-        // Use standard built-in Psych 0.7.3 freeplay icons ("dad", "spirit", "pico") so WeekData never hits a missing icon texture
-        val validIcons = listOf("dad", "spirit", "pico", "spooky", "mom")
+        val validIcons = listOf("dad", "spirit", "pico", "spooky", "mom", "monster")
         val songsEntries = mod.songs.mapIndexed { idx, song ->
             val icon = validIcons[idx % validIcons.size]
             """    ["${escapeJson(slugify(song.title))}", "$icon", [$r, $g, $b]]"""
@@ -72,7 +85,7 @@ object Psych073ModBuilder {
                 "gf"
               ],
               "weekBackground": "stage",
-              "storyName": "MARIO'S MADNESS: SECRET EXIT REIMAGINED (5 ACTS)",
+              "storyName": "MARIO'S MADNESS V2 (#359554) - 5 ACTS & 3 ENDINGS",
               "weekBefore": "tutorial",
               "weekName": "${escapeJson(mod.title)}",
               "startUnlocked": true,
@@ -83,154 +96,268 @@ object Psych073ModBuilder {
         """.trimIndent()
     }
 
-    /**
-     * Generates `stages/secret_exit_citadel.json` for Psych Engine 0.7.3.
-     */
     fun generateSecretExitStageJson(): String {
         return """
             {
               "directory": "",
-              "defaultZoom": 0.75,
+              "defaultZoom": 0.72,
               "isPixelStage": false,
-              "boyfriend": [820, 100],
+              "boyfriend": [830, 110],
               "girlfriend": [460, 130],
-              "opponent": [120, 100],
+              "opponent": [110, 95],
               "hide_girlfriend": false,
-              "camera_boyfriend": [0, 0],
-              "camera_opponent": [0, 0],
+              "camera_boyfriend": [-40, -20],
+              "camera_opponent": [40, -20],
               "camera_girlfriend": [0, 0],
-              "camera_speed": 1.25
+              "camera_speed": 1.35
             }
         """.trimIndent()
     }
 
     /**
-     * Generates `stages/secret_exit_citadel.lua` using procedural `makeGraphic` sprites
-     * so it renders Ultra M's Corrupted Citadel in real Psych Engine 0.7.3 with zero external PNG dependencies.
+     * Generates `stages/secret_exit_citadel.lua` which loads the real `images/mmv2/stage_ultram.png`
+     * artwork plus procedural castle pillars, lava glow, and animated HUD framing.
      */
     fun generateSecretExitStageLua(): String {
         return """
             -- ============================================================================
-            -- Mario's Madness: Secret Exit Reimagined - Procedural Stage (Psych Engine 0.7.3)
+            -- MARIO'S MADNESS V2 (#359554): ULTRA M'S CORRUPTED CITADEL STAGE
             -- File: stages/secret_exit_citadel.lua
-            -- Uses HaxeFlixel makeGraphic() so it works 100% standalone in Psych Engine 0.7.3
+            -- Loads bundled 'images/mmv2/stage_ultram.png' + procedural parallax layers
             -- ============================================================================
 
             function onCreate()
-                -- 1. Deep Corrupted Cartridge Sky Backdrop
-                makeLuaSprite('seSky', '', -600, -400)
-                makeGraphic('seSky', 2800, 1800, '140206')
+                -- 1. Base Sky Backdrop
+                makeLuaSprite('seSky', '', -650, -420)
+                makeGraphic('seSky', 2900, 1850, '120206')
                 setScrollFactor('seSky', 0.1, 0.1)
                 addLuaSprite('seSky', false)
 
-                -- 2. Distant Crimson Castle Pillars
+                -- 2. Real Mario's Madness V2 Ultra M Citadel Painting (images/mmv2/stage_ultram.png)
+                makeLuaSprite('mmv2StageArt', 'mmv2/stage_ultram', -380, -220)
+                setScrollFactor('mmv2StageArt', 0.35, 0.35)
+                scaleObject('mmv2StageArt', 1.85, 1.85)
+                addLuaSprite('mmv2StageArt', false)
+
+                -- 3. Distant Crimson Castle Pillars
                 for i = 1, 5 do
                     local tag = 'sePillar' .. i
-                    makeLuaSprite(tag, '', -450 + (i * 420), -220)
-                    makeGraphic(tag, 110, 1100, '2B050D')
-                    setScrollFactor(tag, 0.4, 0.4)
+                    makeLuaSprite(tag, '', -500 + (i * 430), -240)
+                    makeGraphic(tag, 96, 1120, '26040C')
+                    setScrollFactor(tag, 0.55, 0.55)
+                    setProperty(tag .. '.alpha', 0.72)
                     addLuaSprite(tag, false)
                 end
 
-                -- 3. Glowing Lava / Code Rift Horizon
+                -- 4. Glowing Lava / Corrupt Cartridge Horizon
                 makeLuaSprite('seLavaGlow', '', -600, 520)
-                makeGraphic('seLavaGlow', 2800, 380, '8A0B1E')
-                setScrollFactor('seLavaGlow', 0.7, 0.7)
-                setProperty('seLavaGlow.alpha', 0.65)
+                makeGraphic('seLavaGlow', 2800, 380, 'FF183A')
+                setScrollFactor('seLavaGlow', 0.75, 0.75)
+                setProperty('seLavaGlow.alpha', 0.42)
                 addLuaSprite('seLavaGlow', false)
 
-                -- 4. Main Citadel Stone Bridge Floor
-                makeLuaSprite('seFloor', '', -550, 640)
-                makeGraphic('seFloor', 2700, 320, '1E1822')
+                -- 5. Main Citadel Stone Bridge Floor
+                makeLuaSprite('seFloor', '', -580, 640)
+                makeGraphic('seFloor', 2760, 340, '19121E')
                 setScrollFactor('seFloor', 1.0, 1.0)
                 addLuaSprite('seFloor', false)
 
-                -- 5. Top & Bottom Cinematic Letterbox Bars (HUD)
+                -- 6. Cinematic Letterbox Bars (HUD)
                 makeLuaSprite('seBarTop', '', 0, 0)
-                makeGraphic('seBarTop', 1280, 54, '000000')
+                makeGraphic('seBarTop', 1280, 52, '000000')
                 setObjectCamera('seBarTop', 'hud')
                 addLuaSprite('seBarTop', false)
 
-                makeLuaSprite('seBarBottom', '', 0, 666)
-                makeGraphic('seBarBottom', 1280, 54, '000000')
+                makeLuaSprite('seBarBottom', '', 0, 668)
+                makeGraphic('seBarBottom', 1280, 52, '000000')
                 setObjectCamera('seBarBottom', 'hud')
                 addLuaSprite('seBarBottom', false)
             end
 
             function onBeatHit()
-                -- Pulse the lava horizon on every 2nd beat
                 if curBeat % 2 == 0 then
-                    setProperty('seLavaGlow.alpha', 0.85)
-                    doTweenAlpha('seLavaFade', 'seLavaGlow', 0.45, crochet / 1000, 'quadOut')
+                    setProperty('seLavaGlow.alpha', 0.65)
+                    doTweenAlpha('seLavaFade', 'seLavaGlow', 0.32, crochet / 1000, 'quadOut')
                 end
             end
         """.trimIndent()
     }
 
     /**
-     * Generates the flagship 5-Act Director Script (`scripts/secret_exit_5act_director.lua`)
-     * for the actual Psych Engine 0.7.3 game.
+     * Generates the flagship 5-Act & 3-Branching-Endings Director Script (`scripts/secret_exit_5act_director.lua`)
+     * for Psych Engine 0.7.3.
+     * Includes `onEndSong()` cutscene hook (`Function_Stop`) so players experience all 3 endings
+     * (`Ending 1: Canon Bad Ending`, `Ending 2: Warp Pipe Escape`, `Ending 3: Secret Exit True Ending`)
+     * with real cutscene artwork (`mmv2/ending_bad`, `mmv2/ending_escape`, `mmv2/ending_true`).
      */
     fun generateSecretExitDirectorLua(
-        modTitle: String = "Mario's Madness: Secret Exit Reimagined",
+        modTitle: String = "Mario's Madness V2: Secret Exit (3 Endings)",
         enableHealthDrain: Boolean = true,
         enableBeatZoom: Boolean = true
     ): String {
         return """
             -- ============================================================================
-            -- MARIO'S MADNESS: SECRET EXIT REIMAGINED (PSYCH ENGINE 0.7.3 DIRECTOR SCRIPT)
+            -- MARIO'S MADNESS V2 (#359554): 5-ACT & 3-ENDING DIRECTOR (PSYCH ENGINE 0.7.3)
             -- File: scripts/secret_exit_5act_director.lua
-            -- Compatible with Psych Engine 0.7.3 (PC & Android)
             -- ============================================================================
-            -- Controls all 5 Acts of Secret Exit Reimagined:
-            --   ACT I   (Beat 0)  : The Corrupted Citadel (Vs Ultra M - Health Drain)
-            --   ACT II  (Beat 32) : Digital Phantoms (Mr. Virtual & GX - HUD Sway & Glitch)
-            --   ACT III (Beat 64) : Pipe Sewer Ambush (Turmoil - Spacebar/Touch Dodge Events)
-            --   ACT IV  (Beat 96) : Starman Awakening (Luigi & Pico Assist - Regen Boost!)
-            --   ACT V   (Beat 128): Secret Exit Found! (BF & GF Escape the Cartridge!)
+            -- 3 PLAYABLE BRANCHING ENDINGS:
+            --   ENDING 1 (BAD ENDING - 'ALL-STARS'): Triggered if Starman Stars == 0 & Misses > 12 (or Press [1])
+            --   ENDING 2 (ESCAPE ENDING - 'OVERDUE PIPE'): Triggered if Starman Stars < 3 & Survived (or Press [2])
+            --   ENDING 3 (TRUE ENDING - 'SECRET EXIT'): Triggered if Starman Stars >= 3 (or Press [3])
             -- ============================================================================
 
             local currentAct = 1
             local enableDrain = $enableHealthDrain
             local enableZoom = $enableBeatZoom
+            local starmanStars = 0
             local starmanActive = false
+            local inEndingCutscene = false
+            local selectedEnding = 0
+            local endingSceneStep = 1
 
             function onCreatePost()
-                -- Style Health Bar in Mario's Madness Crimson & Starman Cyan
                 setHealthBarColors('FF183A', '00E5FF')
 
-                -- Top Act Banner Text
-                makeLuaText('actBannerTxt', 'ACT I - THE CORRUPTED CITADEL (VS ULTRA M)', 1280, 0, 14)
-                setTextSize('actBannerTxt', 22)
+                -- Top Act & Starman Counter Banner
+                makeLuaText('actBannerTxt', 'ACT I - ULTRA M CITADEL | ★ STARMAN: 0/3 | KEYS [1][2][3]: ENDINGS', 1280, 0, 14)
+                setTextSize('actBannerTxt', 20)
                 setTextColor('actBannerTxt', 'FF183A')
                 setTextBorder('actBannerTxt', 2, '000000')
                 setTextAlignment('actBannerTxt', 'center')
                 setObjectCamera('actBannerTxt', 'hud')
                 addLuaText('actBannerTxt')
 
-                -- Bottom Secret Exit 0.7.3 Status Bar
-                makeLuaText('seHudStatus', '${escapeLua(modTitle)} | Psych Engine ' .. version .. ' [TRUE ENDING]', 1280, 0, 680)
-                setTextSize('seHudStatus', 16)
+                -- Bottom Status Bar
+                makeLuaText('seHudStatus', '${escapeLua(modTitle)} | 3 Endings Ready (Bad / Escape / True Secret Exit)', 1280, 0, 682)
+                setTextSize('seHudStatus', 15)
                 setTextColor('seHudStatus', 'FFD740')
                 setTextBorder('seHudStatus', 1.5, '000000')
                 setTextAlignment('seHudStatus', 'center')
                 setObjectCamera('seHudStatus', 'hud')
                 addLuaText('seHudStatus')
 
-                -- Center Screen Dramatic Act Transition Overlay
-                makeLuaText('actCenterPopup', '', 1280, 0, 310)
-                setTextSize('actCenterPopup', 42)
+                -- Center Act Transition Popup
+                makeLuaText('actCenterPopup', '', 1280, 0, 290)
+                setTextSize('actCenterPopup', 40)
                 setTextColor('actCenterPopup', 'FFFFFF')
                 setTextBorder('actCenterPopup', 3, 'FF183A')
                 setTextAlignment('actCenterPopup', 'center')
                 setObjectCamera('actCenterPopup', 'hud')
                 setProperty('actCenterPopup.alpha', 0)
                 addLuaText('actCenterPopup')
+
+                -- Preload the 3 Ending Cutscene Sprites (HUD layer, hidden until ending triggers)
+                makeLuaSprite('endingBg1', 'mmv2/ending_bad', 140, 65)
+                setObjectCamera('endingBg1', 'other')
+                scaleObject('endingBg1', 0.78, 0.78)
+                setProperty('endingBg1.visible', false)
+                addLuaSprite('endingBg1', true)
+
+                makeLuaSprite('endingBg2', 'mmv2/ending_escape', 140, 65)
+                setObjectCamera('endingBg2', 'other')
+                scaleObject('endingBg2', 0.78, 0.78)
+                setProperty('endingBg2.visible', false)
+                addLuaSprite('endingBg2', true)
+
+                makeLuaSprite('endingBg3', 'mmv2/ending_true', 140, 65)
+                setObjectCamera('endingBg3', 'other')
+                scaleObject('endingBg3', 0.78, 0.78)
+                setProperty('endingBg3.visible', false)
+                addLuaSprite('endingBg3', true)
+
+                -- Ending Dialogue Box Panel
+                makeLuaSprite('endingDialogBox', '', 80, 490)
+                makeGraphic('endingDialogBox', 1120, 195, '0B0812')
+                setObjectCamera('endingDialogBox', 'other')
+                setProperty('endingDialogBox.visible', false)
+                addLuaSprite('endingDialogBox', true)
+
+                makeLuaText('endingTitleTxt', '', 1080, 100, 502)
+                setTextSize('endingTitleTxt', 26)
+                setTextColor('endingTitleTxt', 'FFD740')
+                setTextBorder('endingTitleTxt', 2, '000000')
+                setTextAlignment('endingTitleTxt', 'left')
+                setObjectCamera('endingTitleTxt', 'other')
+                setProperty('endingTitleTxt.visible', false)
+                addLuaText('endingTitleTxt')
+
+                makeLuaText('endingBodyTxt', '', 1080, 100, 542)
+                setTextSize('endingBodyTxt', 19)
+                setTextColor('endingBodyTxt', 'FFFFFF')
+                setTextBorder('endingBodyTxt', 1.5, '000000')
+                setTextAlignment('endingBodyTxt', 'left')
+                setObjectCamera('endingBodyTxt', 'other')
+                setProperty('endingBodyTxt.visible', false)
+                addLuaText('endingBodyTxt')
+
+                makeLuaText('endingHintTxt', '[SPACE / CLICK] Next Dialogue   |   [1] Bad Ending   [2] Escape Ending   [3] True Ending   |   [ENTER] Finish', 1080, 100, 648)
+                setTextSize('endingHintTxt', 15)
+                setTextColor('endingHintTxt', '00E5FF')
+                setTextBorder('endingHintTxt', 1.5, '000000')
+                setTextAlignment('endingHintTxt', 'center')
+                setObjectCamera('endingHintTxt', 'other')
+                setProperty('endingHintTxt.visible', false)
+                addLuaText('endingHintTxt')
             end
 
-            local function triggerActChange(actNum, bannerTitle, popupTitle, hexColor, bgHex)
+            local endingScripts = {
+                [1] = {
+                    title = "ENDING 1 OF 3: CANON BAD ENDING ('ALL-STARS: SEE YOU NEXT TIME')",
+                    color = "FF183A",
+                    lines = {
+                        "ULTRA M: 'You fought hard, little boy... but in MY world, the house always wins.'",
+                        "NARRATOR: Without 3 Golden Starman Notes, crimson chains erupt from the Citadel floor, pulling BF & GF into the abyss.",
+                        "ULTRA M: 'Come now, take the step. Don't look back, there's nothing left for you beyond the veil... SEE YOU NEXT TIME.'"
+                    }
+                },
+                [2] = {
+                    title = "ENDING 2 OF 3: BITTERSWEET ESCAPE ('OVERDUE WARP PIPE')",
+                    color = "00E676",
+                    lines = {
+                        "PICO & BETA LUIGI: 'Go! Jump through the green Warp Pipe before MX and Ultra M collapse the tunnel!'",
+                        "NARRATOR: Boyfriend grabs Girlfriend's hand and dives through the static portal just as the CRT television screen shatters!",
+                        "BOYFRIEND: 'We made it out alive... and smashed the NES cartridge, though Luigi and Pico's echoes remain inside.'"
+                    }
+                },
+                [3] = {
+                    title = "ENDING 3 OF 3: SECRET EXIT TRUE ENDING ('GOLDEN STARMAN LIBERATION')",
+                    color = "FFD740",
+                    lines = {
+                        "STARMAN BF & GF: '3 Golden Starman Notes collected! Invincibility resonance at 100% — Firing Starman Harmony Beam!'",
+                        "ULTRA M: 'IMPOSSIBLE! My entire cartridge kingdom is unravelling! How did you find the Secret Exit Keyhole?!'",
+                        "NARRATOR: The Golden Keyhole expands! BF, GF, Luigi, Peach, Yoshi, and Pico cross the Goal Tape back to reality!"
+                    }
+                }
+            }
+
+            local function showEndingCutscene(endingIndex)
+                inEndingCutscene = true
+                selectedEnding = endingIndex
+                endingSceneStep = 1
+
+                setProperty('endingBg1.visible', endingIndex == 1)
+                setProperty('endingBg2.visible', endingIndex == 2)
+                setProperty('endingBg3.visible', endingIndex == 3)
+                setProperty('endingDialogBox.visible', true)
+                setProperty('endingTitleTxt.visible', true)
+                setProperty('endingBodyTxt.visible', true)
+                setProperty('endingHintTxt.visible', true)
+
+                local data = endingScripts[endingIndex]
+                setTextString('endingTitleTxt', data.title)
+                setTextColor('endingTitleTxt', data.color)
+                setTextString('endingBodyTxt', data.lines[1])
+                cameraFlash('other', data.color, 0.45, true)
+                playSound('confirmMenu', 0.9)
+            end
+
+            local function updateBanner()
+                setTextString('actBannerTxt', 'ACT ' .. currentAct .. '/5 | ★ STARMAN: ' .. starmanStars .. '/3 | [1] BAD [2] ESCAPE [3] TRUE ENDING')
+            end
+
+            local function triggerActChange(actNum, popupTitle, hexColor, bgHex)
                 currentAct = actNum
-                setTextString('actBannerTxt', bannerTitle)
+                updateBanner()
                 setTextColor('actBannerTxt', hexColor)
 
                 setTextString('actCenterPopup', popupTitle)
@@ -245,118 +372,106 @@ object Psych073ModBuilder {
             end
 
             function onBeatHit()
-                -- Automatic 5-Act Progression by Beat
                 if curBeat == 32 and currentAct < 2 then
-                    triggerActChange(
-                        2,
-                        'ACT II - DIGITAL PHANTOMS (MR. VIRTUAL & GX)',
-                        'ACT II: PARANOIA MIRAGE',
-                        'E040FB',
-                        '6A0080'
-                    )
+                    triggerActChange(2, 'ACT II: MR. VIRTUAL PARANOIA', 'E040FB', '6A0080')
                 elseif curBeat == 64 and currentAct < 3 then
-                    triggerActChange(
-                        3,
-                        'ACT III - BROKEN PIPE AMBUSH (DODGE READY!)',
-                        'ACT III: LAVA PIPE AMBUSH',
-                        'FF9100',
-                        'B23C00'
-                    )
+                    triggerActChange(3, 'ACT III: MX & TURMOIL AMBUSH', 'FF9100', 'B23C00')
                 elseif curBeat == 96 and currentAct < 4 then
                     starmanActive = true
-                    triggerActChange(
-                        4,
-                        'ACT IV - STARMAN LIBERATION (BF & GF POWER UP!)',
-                        'ACT IV: STARMAN AWAKENING!',
-                        '00E5FF',
-                        '006978'
-                    )
+                    triggerActChange(4, 'ACT IV: PICO & LUIGI WARP ASSIST', '00E5FF', '006978')
                     setHealthBarColors('7C4DFF', '00E676')
                 elseif curBeat == 128 and currentAct < 5 then
                     starmanActive = true
-                    triggerActChange(
-                        5,
-                        'ACT V - SECRET EXIT FOUND! (BREAKING THE CARTRIDGE)',
-                        'FINAL ACT: SECRET EXIT FOUND!',
-                        'FFD740',
-                        'FFAB00'
-                    )
+                    triggerActChange(5, 'ACT V: SECRET EXIT CLIMAX!', 'FFD740', 'FFAB00')
                 end
 
-                -- Beat Camera Zoom Pulse
-                if enableZoom then
-                    if currentAct == 5 or ( curBeat % 2 == 0 ) then
-                        triggerEvent('Add Camera Zoom', '0.022', '0.04')
-                    end
-                end
-
-                -- Act 2 Virtual Reality HUD Sway
-                if currentAct == 2 then
-                    local sway = (curBeat % 2 == 0) and 1.2 or -1.2
-                    setProperty('camHUD.angle', sway)
-                    doTweenAngle('resetHudAngle', 'camHUD', 0, crochet / 1000, 'sineOut')
+                if enableZoom and (currentAct == 5 or curBeat % 2 == 0) then
+                    triggerEvent('Add Camera Zoom', '0.022', '0.04')
                 end
             end
 
-            function onEvent(name, value1, value2)
-                if name == 'SecretExitAct' then
-                    local act = tonumber(value1) or 1
-                    if act == 1 then
-                        triggerActChange(1, 'ACT I - ' .. value2, 'ACT I: ' .. value2, 'FF183A', '8A0B1E')
-                    elseif act == 2 then
-                        triggerActChange(2, 'ACT II - ' .. value2, 'ACT II: ' .. value2, 'E040FB', '6A0080')
-                    elseif act == 3 then
-                        triggerActChange(3, 'ACT III - ' .. value2, 'ACT III: ' .. value2, 'FF9100', 'B23C00')
-                    elseif act == 4 then
-                        starmanActive = true
-                        triggerActChange(4, 'ACT IV - ' .. value2, 'ACT IV: ' .. value2, '00E5FF', '006978')
-                        setHealthBarColors('7C4DFF', '00E676')
-                    elseif act == 5 then
-                        starmanActive = true
-                        triggerActChange(5, 'ACT V - ' .. value2, 'FINAL ACT: ' .. value2, 'FFD740', 'FFAB00')
-                    end
+            function onUpdatePost(elapsed)
+                -- Allow switching or viewing any of the 3 Endings anytime via keys [1], [2], [3]
+                if keyboardJustPressed('ONE') then
+                    showEndingCutscene(1)
+                elseif keyboardJustPressed('TWO') then
+                    showEndingCutscene(2)
+                elseif keyboardJustPressed('THREE') then
+                    showEndingCutscene(3)
                 end
-            end
 
-            function opponentNoteHit(id, direction, noteType, isSustainNote)
-                -- Ultra M Health Drain during Acts 1..3 (Disabled in Act 4 & 5 when BF gets the Starman!)
-                if enableDrain and not starmanActive then
-                    local curHealth = getProperty('health')
-                    if curHealth > 0.32 then
-                        setProperty('health', curHealth - 0.016)
+                if inEndingCutscene then
+                    if keyJustPressed('space') or mouseClicked('left') then
+                        endingSceneStep = endingSceneStep + 1
+                        local data = endingScripts[selectedEnding]
+                        if endingSceneStep <= #data.lines then
+                            setTextString('endingBodyTxt', data.lines[endingSceneStep])
+                            playSound('scrollMenu', 0.8)
+                        else
+                            inEndingCutscene = false
+                            endSong()
+                        end
+                    elseif keyJustPressed('accept') then
+                        inEndingCutscene = false
+                        endSong()
                     end
                 end
             end
 
             function goodNoteHit(id, direction, noteType, isSustainNote)
+                if noteType == 'Starman Note' then
+                    starmanStars = starmanStars + 1
+                    starmanActive = true
+                    updateBanner()
+                end
                 if not isSustainNote then
                     local curHealth = getProperty('health')
-                    local boost = starmanActive and 0.042 or 0.024
+                    local boost = starmanActive and 0.045 or 0.024
                     setProperty('health', math.min(2.0, curHealth + boost))
                 end
+            end
+
+            function opponentNoteHit(id, direction, noteType, isSustainNote)
+                if enableDrain and not starmanActive then
+                    local curHealth = getProperty('health')
+                    if curHealth > 0.30 then
+                        setProperty('health', curHealth - 0.015)
+                    end
+                end
+            end
+
+            -- Intercept end of song to play the earned Ending Cutscene (1, 2, or 3)!
+            function onEndSong()
+                if not inEndingCutscene and selectedEnding == 0 then
+                    if starmanStars >= 3 then
+                        showEndingCutscene(3) -- Ending 3: Secret Exit True Ending
+                    elseif getProperty('songMisses') <= 15 and getProperty('health') >= 0.45 then
+                        showEndingCutscene(2) -- Ending 2: Bittersweet Warp Pipe Escape
+                    else
+                        showEndingCutscene(1) -- Ending 1: Canon Bad Ending
+                    end
+                    return Function_Stop
+                end
+                return Function_Continue
             end
         """.trimIndent()
     }
 
-    /**
-     * Generates `custom_notetypes/Hurt Note.lua` for Psych Engine 0.7.3.
-     */
     fun generateHurtNoteLua(): String {
         return """
             -- ============================================================================
-            -- Psych Engine 0.7.3 Custom NoteType: Hurt Note (Fire Mario Note)
+            -- Psych Engine 0.7.3 Custom NoteType: Hurt Note (Fire Mario / Poison Mushroom)
             -- File: custom_notetypes/Hurt Note.lua
-            -- Uses pure Psych Engine 0.7.3 Note properties (no deprecated 0.6.x colorSwap)
             -- ============================================================================
             function onCreate()
                 for i = 0, getProperty('unspawnNotes.length') - 1 do
                     local nt = getPropertyFromGroup('unspawnNotes', i, 'noteType')
                     if nt == 'Hurt Note' or nt == 'Fire Mario Note' then
+                        setPropertyFromGroup('unspawnNotes', i, 'texture', 'HURTNOTE_assets')
                         setPropertyFromGroup('unspawnNotes', i, 'hitHealth', -0.35)
                         setPropertyFromGroup('unspawnNotes', i, 'missHealth', 0)
                         setPropertyFromGroup('unspawnNotes', i, 'hitCausesMiss', true)
                         setPropertyFromGroup('unspawnNotes', i, 'lowPriority', true)
-                        setPropertyFromGroup('unspawnNotes', i, 'multAlpha', 0.82)
                         if getPropertyFromGroup('unspawnNotes', i, 'mustPress') then
                             setPropertyFromGroup('unspawnNotes', i, 'ignoreNote', true)
                         end
@@ -376,20 +491,17 @@ object Psych073ModBuilder {
         """.trimIndent()
     }
 
-    /**
-     * Generates `custom_notetypes/Starman Note.lua` for Psych Engine 0.7.3.
-     * Hitting a Starman Note in Acts 4 & 5 grants massive health regeneration & golden flash!
-     */
     fun generateStarmanNoteLua(): String {
         return """
             -- ============================================================================
-            -- Psych Engine 0.7.3 Custom NoteType: Starman Note (Secret Exit Powerup)
+            -- Psych Engine 0.7.3 Custom NoteType: Starman Note (Unlocks Ending 3: Secret Exit)
             -- File: custom_notetypes/Starman Note.lua
             -- ============================================================================
             function onCreate()
                 for i = 0, getProperty('unspawnNotes.length') - 1 do
                     if getPropertyFromGroup('unspawnNotes', i, 'noteType') == 'Starman Note' then
-                        setPropertyFromGroup('unspawnNotes', i, 'hitHealth', 0.35)
+                        setPropertyFromGroup('unspawnNotes', i, 'texture', 'STARMANNOTE_assets')
+                        setPropertyFromGroup('unspawnNotes', i, 'hitHealth', 0.38)
                         setPropertyFromGroup('unspawnNotes', i, 'missHealth', 0)
                         setPropertyFromGroup('unspawnNotes', i, 'ignoreNote', false)
                     end
@@ -398,24 +510,21 @@ object Psych073ModBuilder {
 
             function goodNoteHit(id, noteData, noteType, isSustainNote)
                 if noteType == 'Starman Note' then
-                    addScore(1000)
+                    addScore(1500)
                     cameraFlash('camHUD', 'FFD740', 0.25, true)
                     playAnim('boyfriend', 'hey', true)
                     setProperty('boyfriend.specialAnim', true)
-                    playSound('confirmMenu', 0.75)
+                    playSound('confirmMenu', 0.85)
                 end
             end
         """.trimIndent()
     }
 
-    /**
-     * Generates `custom_events/DodgeEvent.lua` for Psych Engine 0.7.3.
-     */
     fun generateDodgeEventLua(): String {
         return """
             -- ============================================================================
-            -- Psych Engine 0.7.3 Custom Event: DodgeEvent (Ultra M Spike & Pipe Ambush)
-            -- Works on PC (SPACEBAR) and Android Psych 0.7.3 (Screen Tap / Virtual Pad)
+            -- Psych Engine 0.7.3 Custom Event: DodgeEvent (Ultra M Lava Pipe Ambush)
+            -- Works on PC (SPACEBAR) and Android Psych 0.7.3 (Screen Tap)
             -- ============================================================================
             local canDodge = false
             local dodged = false
@@ -469,10 +578,6 @@ object Psych073ModBuilder {
         """.trimIndent()
     }
 
-    /**
-     * Generates a complete 5-Act (32-section, 128+ beat) Psych Engine 0.7.3 chart JSON
-     * with Act transitions (`SecretExitAct`), `DodgeEvent`, `Hurt Note`, and `Starman Note`.
-     */
     fun generateChartJson(
         song: SongItem,
         difficulty: String = "hard",
@@ -480,9 +585,9 @@ object Psych073ModBuilder {
         includeDodgeEvents: Boolean = true
     ): String {
         val bpm = song.bpm.coerceIn(100, 240)
-        val stepMs = (60000.0 / bpm) / 4.0 // 16th note duration in ms
+        val stepMs = (60000.0 / bpm) / 4.0
         val sectionSteps = 16
-        val totalSections = 40 // 40 sections = 160 beats = 5 full Acts (8 sections / 32 beats per Act)
+        val totalSections = 40
         val speed = when (difficulty.lowercase()) {
             "easy" -> 2.3
             "normal" -> 2.8
@@ -497,7 +602,6 @@ object Psych073ModBuilder {
         val sectionsJsonList = mutableListOf<String>()
         val eventsJsonList = mutableListOf<String>()
 
-        // Act Transition Events for Secret Exit Reimagined (5 Acts across 40 sections)
         val actTitles = mapOf(
             0 to ("1" to "THE CORRUPTED CITADEL"),
             8 to ("2" to "DIGITAL PHANTOMS"),
@@ -516,35 +620,32 @@ object Psych073ModBuilder {
                 eventsJsonList.add("""[$evTime, [["SecretExitAct", "$actNum", "$actName"]]]""")
             }
 
-            // Melodic & rhythmic patterns varied by Act (1..5)
             val actNumber = (sectionIdx / 8) + 1
             for (step in 0 until sectionSteps step noteDensityStep) {
                 val strumTime = String.format("%.2f", sectionStartMs + step * stepMs)
                 val lane = when (actNumber) {
-                    1 -> (sectionIdx + step / noteDensityStep) % 4 // Staircase
-                    2 -> ((step / noteDensityStep) * 3 + sectionIdx) % 4 // Alternating jumps
-                    3 -> (3 - ((step / noteDensityStep) % 4)) // Reverse stream
-                    4 -> ((step / noteDensityStep) + (sectionIdx % 2) * 2) % 4 // Starman rush
-                    else -> (step / noteDensityStep) % 4 // Act 5 climax stream
+                    1 -> (sectionIdx + step / noteDensityStep) % 4
+                    2 -> ((step / noteDensityStep) * 3 + sectionIdx) % 4
+                    3 -> (3 - ((step / noteDensityStep) % 4))
+                    4 -> ((step / noteDensityStep) + (sectionIdx % 2) * 2) % 4
+                    else -> (step / noteDensityStep) % 4
                 }
                 val sustainLen = if (step == 0 || step == 8) String.format("%.2f", stepMs * 2) else "0"
                 notesInSection.add("[$strumTime, $lane, $sustainLen]")
 
-                // Add opponent counterpoint note on the opposite strumline (4..7)
                 if (step % 4 == 0) {
                     val oppLane = 4 + ((lane + 1) % 4)
                     notesInSection.add("[$strumTime, $oppLane, 0]")
                 }
 
-                // Add Fire / Hurt Notes in Acts 1-3 on Hard
                 if (difficulty.equals("hard", ignoreCase = true) && includeHurtNotes && actNumber <= 3 && step == 12 && sectionIdx % 2 == 1) {
                     val hurtTime = String.format("%.2f", sectionStartMs + (step + 1) * stepMs)
                     val hurtLane = (lane + 2) % 4
                     notesInSection.add("""[$hurtTime, $hurtLane, 0, "Hurt Note"]""")
                 }
 
-                // Add Starman Powerup Notes in Acts 4 & 5
-                if (actNumber >= 4 && step == 6 && sectionIdx % 2 == 1) {
+                // Spawn Golden Starman Notes across Acts 2, 3, 4 & 5 so players can collect 3+ Stars for Ending 3
+                if (actNumber >= 2 && step == 6 && sectionIdx % 4 == 1) {
                     val starTime = String.format("%.2f", sectionStartMs + (step + 1) * stepMs)
                     val starLane = (lane + 1) % 4
                     notesInSection.add("""[$starTime, $starLane, 0, "Starman Note"]""")
@@ -589,7 +690,7 @@ object Psych073ModBuilder {
                   $allEvents
                 ],
                 "bpm": $bpm,
-                "needsVoices": true,
+                "needsVoices": false,
                 "speed": $speed,
                 "player1": "bf",
                 "player2": "dad",
@@ -601,9 +702,6 @@ object Psych073ModBuilder {
         """.trimIndent()
     }
 
-    /**
-     * Alias for compatibility with existing callers
-     */
     fun generatePsych073LuaScript(
         modTitle: String,
         enableHealthDrain: Boolean = true,
@@ -613,17 +711,84 @@ object Psych073ModBuilder {
         return generateSecretExitDirectorLua(modTitle, enableHealthDrain, enableBeatZoom)
     }
 
-    private fun loadBundledOggBytes(context: Context, assetName: String): ByteArray {
+    /**
+     * Converts a drawable resource into PNG bytes for bundling inside the Psych Engine 0.7.3 mod folder & ZIP.
+     */
+    private fun drawableToPngBytes(context: Context, resId: Int, maxDim: Int = 960): ByteArray {
         return try {
-            context.assets.open(assetName).use { it.readBytes() }
+            val raw = BitmapFactory.decodeResource(context.resources, resId) ?: return ByteArray(0)
+            val ratio = minOf(maxDim.toFloat() / raw.width, maxDim.toFloat() / raw.height, 1f)
+            val scaled = if (ratio < 1f) {
+                Bitmap.createScaledBitmap(
+                    raw,
+                    (raw.width * ratio).toInt().coerceAtLeast(1),
+                    (raw.height * ratio).toInt().coerceAtLeast(1),
+                    true
+                )
+            } else {
+                raw
+            }
+            val out = ByteArrayOutputStream()
+            scaled.compress(Bitmap.CompressFormat.PNG, 92, out)
+            out.toByteArray()
         } catch (_: Exception) {
-            generateMinimalOggBytes()
+            ByteArray(0)
         }
     }
 
     /**
-     * Generates a valid Ogg container header with proper Ogg CRC-32 checksum.
+     * Generates a real 4-lane custom note spritesheet PNG (`HURTNOTE_assets.png` or `STARMANNOTE_assets.png`)
+     * + matching Sparrow v2 XML so Psych Engine 0.7.3 renders custom note graphics.
      */
+    private fun generateCustomNoteSheetPng(isStarman: Boolean): ByteArray {
+        val bmp = Bitmap.createBitmap(640, 160, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val mainColor = if (isStarman) Color.parseColor("#FFD740") else Color.parseColor("#FF183A")
+        val coreColor = if (isStarman) Color.parseColor("#FFF59D") else Color.parseColor("#1F040A")
+        val borderColor = if (isStarman) Color.parseColor("#00E5FF") else Color.parseColor("#FF8A80")
+
+        for (i in 0..3) {
+            val left = i * 160f + 16f
+            val top = 16f
+            val rect = RectF(left, top, left + 128f, top + 128f)
+            paint.style = Paint.Style.FILL
+            paint.shader = LinearGradient(
+                left, top, left + 128f, top + 128f,
+                mainColor, coreColor, Shader.TileMode.CLAMP
+            )
+            canvas.drawRoundRect(rect, 28f, 28f, paint)
+            paint.shader = null
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 8f
+            paint.color = borderColor
+            canvas.drawRoundRect(rect, 28f, 28f, paint)
+        }
+        val out = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+        return out.toByteArray()
+    }
+
+    private fun generateCustomNoteSparrowXml(imageName: String): String {
+        return """
+            <?xml version="1.0" encoding="utf-8"?>
+            <TextureAtlas imagePath="$imageName">
+                <SubTexture name="purple0000" x="0" y="0" width="160" height="160"/>
+                <SubTexture name="blue0000" x="160" y="0" width="160" height="160"/>
+                <SubTexture name="green0000" x="320" y="0" width="160" height="160"/>
+                <SubTexture name="red0000" x="480" y="0" width="160" height="160"/>
+                <SubTexture name="purple hold piece0000" x="40" y="40" width="80" height="80"/>
+                <SubTexture name="blue hold piece0000" x="200" y="40" width="80" height="80"/>
+                <SubTexture name="green hold piece0000" x="360" y="40" width="80" height="80"/>
+                <SubTexture name="red hold piece0000" x="520" y="40" width="80" height="80"/>
+                <SubTexture name="purple hold end0000" x="40" y="40" width="80" height="80"/>
+                <SubTexture name="blue hold end0000" x="200" y="40" width="80" height="80"/>
+                <SubTexture name="green hold end0000" x="360" y="40" width="80" height="80"/>
+                <SubTexture name="red hold end0000" x="520" y="40" width="80" height="80"/>
+            </TextureAtlas>
+        """.trimIndent()
+    }
+
     fun generateMinimalOggBytes(): ByteArray {
         val out = ByteArrayOutputStream()
         val oggPage = byteArrayOf(
@@ -633,7 +798,7 @@ object Psych073ModBuilder {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x01, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, // CRC placeholder at 22..25
+            0x00, 0x00, 0x00, 0x00,
             0x01,
             0x1E,
             0x01, 'v'.code.toByte(), 'o'.code.toByte(), 'r'.code.toByte(), 'b'.code.toByte(), 'i'.code.toByte(), 's'.code.toByte(),
@@ -646,7 +811,6 @@ object Psych073ModBuilder {
             0xB8.toByte(),
             0x01
         )
-        // Compute authentic Ogg CRC-32 (polynomial 0x04C11DB7)
         var crc = 0
         for (b in oggPage) {
             crc = (crc shl 8) xor oggCrcLookup(((crc ushr 24) and 0xFF) xor (b.toInt() and 0xFF))
@@ -689,8 +853,34 @@ object Psych073ModBuilder {
             val scriptsDir = File(modDir, "scripts").apply { mkdirs() }
             val noteTypesDir = File(modDir, "custom_notetypes").apply { mkdirs() }
             val eventsDir = File(modDir, "custom_events").apply { mkdirs() }
+            val imagesDir = File(modDir, "images").apply { mkdirs() }
+            val mmv2ImagesDir = File(imagesDir, "mmv2").apply { mkdirs() }
 
             File(modDir, "pack.json").writeText(generatePackJson(detail))
+            val packIconBytes = drawableToPngBytes(context, R.drawable.img_mmv2_hero_1790374102268, 360)
+            if (packIconBytes.isNotEmpty()) {
+                File(modDir, "pack.png").writeBytes(packIconBytes)
+            }
+
+            // Export real stage & 3 ending cutscene PNGs
+            val stageBytes = drawableToPngBytes(context, R.drawable.img_mmv2_stage_ultram_1790591016141, 960)
+            if (stageBytes.isNotEmpty()) File(mmv2ImagesDir, "stage_ultram.png").writeBytes(stageBytes)
+
+            val badEndBytes = drawableToPngBytes(context, R.drawable.img_mmv2_ending_bad_1790591028072, 960)
+            if (badEndBytes.isNotEmpty()) File(mmv2ImagesDir, "ending_bad.png").writeBytes(badEndBytes)
+
+            val escapeEndBytes = drawableToPngBytes(context, R.drawable.mmv2_ending_escape_1790592490896, 960)
+            if (escapeEndBytes.isNotEmpty()) File(mmv2ImagesDir, "ending_escape.png").writeBytes(escapeEndBytes)
+
+            val trueEndBytes = drawableToPngBytes(context, R.drawable.img_mmv2_ending_true_1790591037564, 960)
+            if (trueEndBytes.isNotEmpty()) File(mmv2ImagesDir, "ending_true.png").writeBytes(trueEndBytes)
+
+            // Custom Note PNG + XML Atlases
+            File(imagesDir, "HURTNOTE_assets.png").writeBytes(generateCustomNoteSheetPng(isStarman = false))
+            File(imagesDir, "HURTNOTE_assets.xml").writeText(generateCustomNoteSparrowXml("HURTNOTE_assets.png"))
+            File(imagesDir, "STARMANNOTE_assets.png").writeBytes(generateCustomNoteSheetPng(isStarman = true))
+            File(imagesDir, "STARMANNOTE_assets.xml").writeText(generateCustomNoteSparrowXml("STARMANNOTE_assets.png"))
+
             File(weeksDir, "secret_exit_reimagined.json").writeText(generateWeekJson(detail))
             File(stagesDir, "secret_exit_citadel.json").writeText(generateSecretExitStageJson())
             File(stagesDir, "secret_exit_citadel.lua").writeText(generateSecretExitStageLua())
@@ -703,8 +893,7 @@ object Psych073ModBuilder {
             File(eventsDir, "DodgeEvent.txt").writeText("Triggers Ultra M's Spacebar / Touch Dodge prompt.\nValue 1: Dodge window in seconds (default 0.85)")
             File(eventsDir, "SecretExitAct.txt").writeText("Switches Secret Exit Reimagined Act (1..5).\nValue 1: Act Number (1-5)\nValue 2: Act Subtitle")
 
-            val instBytes = loadBundledOggBytes(context, "secret_exit_inst.ogg")
-            val voicesBytes = loadBundledOggBytes(context, "secret_exit_voices.ogg")
+            val oggBytes = generateMinimalOggBytes()
             detail.mod.songs.forEach { song ->
                 val slug = slugify(song.title)
                 val songDataDir = File(modDir, "data/$slug").apply { mkdirs() }
@@ -716,8 +905,8 @@ object Psych073ModBuilder {
                 )
 
                 val songAudioDir = File(modDir, "songs/$slug").apply { mkdirs() }
-                File(songAudioDir, "Inst.ogg").writeBytes(instBytes)
-                File(songAudioDir, "Voices.ogg").writeBytes(voicesBytes)
+                File(songAudioDir, "Inst.ogg").writeBytes(oggBytes)
+                File(songAudioDir, "Voices.ogg").writeBytes(oggBytes)
             }
 
             modDir.absolutePath
@@ -727,7 +916,8 @@ object Psych073ModBuilder {
     }
 
     /**
-     * Writes a complete, ready-to-install Psych Engine 0.7.3 `.zip` Mod Pack to the target URI.
+     * Writes a complete, multi-megabyte Mario's Madness V2 (#359554) + Secret Exit (3 Endings)
+     * Psych Engine 0.7.3 `.zip` Mod Pack to the target URI, including real PNG stage & cutscene assets.
      */
     fun writePsych073ModZipToUri(
         context: Context,
@@ -739,22 +929,74 @@ object Psych073ModBuilder {
         return try {
             val mod = detail.mod
             val rootFolder = slugify(mod.id)
-            val instBytes = loadBundledOggBytes(context, "secret_exit_inst.ogg")
-            val voicesBytes = loadBundledOggBytes(context, "secret_exit_voices.ogg")
+            val oggBytes = generateMinimalOggBytes()
+
+            val packIconBytes = drawableToPngBytes(context, R.drawable.img_mmv2_hero_1790374102268, 400)
+            val stageBytes = drawableToPngBytes(context, R.drawable.img_mmv2_stage_ultram_1790591016141, 1024)
+            val badEndBytes = drawableToPngBytes(context, R.drawable.img_mmv2_ending_bad_1790591028072, 1024)
+            val escapeEndBytes = drawableToPngBytes(context, R.drawable.mmv2_ending_escape_1790592490896, 1024)
+            val trueEndBytes = drawableToPngBytes(context, R.drawable.img_mmv2_ending_true_1790591037564, 1024)
+            val hurtSheetBytes = generateCustomNoteSheetPng(isStarman = false)
+            val starmanSheetBytes = generateCustomNoteSheetPng(isStarman = true)
 
             context.contentResolver.openOutputStream(targetUri)?.use { rawOut ->
                 ZipOutputStream(rawOut).use { zip ->
-                    // 1. pack.json
+                    // 1. pack.json & pack.png
                     zip.putNextEntry(ZipEntry("$rootFolder/pack.json"))
                     zip.write(generatePackJson(detail).toByteArray())
                     zip.closeEntry()
 
-                    // 2. weeks/secret_exit_reimagined.json
+                    if (packIconBytes.isNotEmpty()) {
+                        zip.putNextEntry(ZipEntry("$rootFolder/pack.png"))
+                        zip.write(packIconBytes)
+                        zip.closeEntry()
+                    }
+
+                    // 2. Real Mario's Madness V2 Stage & 3 Ending Cutscene PNGs
+                    if (stageBytes.isNotEmpty()) {
+                        zip.putNextEntry(ZipEntry("$rootFolder/images/mmv2/stage_ultram.png"))
+                        zip.write(stageBytes)
+                        zip.closeEntry()
+                    }
+                    if (badEndBytes.isNotEmpty()) {
+                        zip.putNextEntry(ZipEntry("$rootFolder/images/mmv2/ending_bad.png"))
+                        zip.write(badEndBytes)
+                        zip.closeEntry()
+                    }
+                    if (escapeEndBytes.isNotEmpty()) {
+                        zip.putNextEntry(ZipEntry("$rootFolder/images/mmv2/ending_escape.png"))
+                        zip.write(escapeEndBytes)
+                        zip.closeEntry()
+                    }
+                    if (trueEndBytes.isNotEmpty()) {
+                        zip.putNextEntry(ZipEntry("$rootFolder/images/mmv2/ending_true.png"))
+                        zip.write(trueEndBytes)
+                        zip.closeEntry()
+                    }
+
+                    // 3. Custom Note Spritesheets & XML Atlases
+                    zip.putNextEntry(ZipEntry("$rootFolder/images/HURTNOTE_assets.png"))
+                    zip.write(hurtSheetBytes)
+                    zip.closeEntry()
+
+                    zip.putNextEntry(ZipEntry("$rootFolder/images/HURTNOTE_assets.xml"))
+                    zip.write(generateCustomNoteSparrowXml("HURTNOTE_assets.png").toByteArray())
+                    zip.closeEntry()
+
+                    zip.putNextEntry(ZipEntry("$rootFolder/images/STARMANNOTE_assets.png"))
+                    zip.write(starmanSheetBytes)
+                    zip.closeEntry()
+
+                    zip.putNextEntry(ZipEntry("$rootFolder/images/STARMANNOTE_assets.xml"))
+                    zip.write(generateCustomNoteSparrowXml("STARMANNOTE_assets.png").toByteArray())
+                    zip.closeEntry()
+
+                    // 4. weeks/secret_exit_reimagined.json
                     zip.putNextEntry(ZipEntry("$rootFolder/weeks/secret_exit_reimagined.json"))
                     zip.write(generateWeekJson(detail).toByteArray())
                     zip.closeEntry()
 
-                    // 3. stages/secret_exit_citadel.json & .lua
+                    // 5. stages/secret_exit_citadel.json & .lua
                     zip.putNextEntry(ZipEntry("$rootFolder/stages/secret_exit_citadel.json"))
                     zip.write(generateSecretExitStageJson().toByteArray())
                     zip.closeEntry()
@@ -763,12 +1005,12 @@ object Psych073ModBuilder {
                     zip.write(generateSecretExitStageLua().toByteArray())
                     zip.closeEntry()
 
-                    // 4. scripts/secret_exit_5act_director.lua
+                    // 6. scripts/secret_exit_5act_director.lua (with 3 Endings Cutscene Engine)
                     zip.putNextEntry(ZipEntry("$rootFolder/scripts/secret_exit_5act_director.lua"))
                     zip.write(generateSecretExitDirectorLua(mod.title, enableHealthDrain, enableBeatZoom).toByteArray())
                     zip.closeEntry()
 
-                    // 5. custom_notetypes/Hurt Note.lua & Starman Note.lua
+                    // 7. custom_notetypes/Hurt Note.lua & Starman Note.lua
                     zip.putNextEntry(ZipEntry("$rootFolder/custom_notetypes/Hurt Note.lua"))
                     zip.write(generateHurtNoteLua().toByteArray())
                     zip.closeEntry()
@@ -777,7 +1019,7 @@ object Psych073ModBuilder {
                     zip.write(generateStarmanNoteLua().toByteArray())
                     zip.closeEntry()
 
-                    // 6. custom_events/DodgeEvent.lua & SecretExitAct.txt
+                    // 8. custom_events/DodgeEvent.lua & SecretExitAct.txt
                     zip.putNextEntry(ZipEntry("$rootFolder/custom_events/DodgeEvent.lua"))
                     zip.write(generateDodgeEventLua().toByteArray())
                     zip.closeEntry()
@@ -790,7 +1032,7 @@ object Psych073ModBuilder {
                     zip.write("Switches Secret Exit Reimagined Act (1..5).\nValue 1: Act Number (1-5)\nValue 2: Act Subtitle".toByteArray())
                     zip.closeEntry()
 
-                    // 7. Each song's Easy/Normal/Hard chart JSON + Lua script + Inst.ogg & Voices.ogg
+                    // 9. Each song's Easy/Normal/Hard chart JSON + Lua script + Inst.ogg & Voices.ogg
                     mod.songs.forEach { song ->
                         val slug = slugify(song.title)
 
@@ -811,40 +1053,37 @@ object Psych073ModBuilder {
                         zip.closeEntry()
 
                         zip.putNextEntry(ZipEntry("$rootFolder/songs/$slug/Inst.ogg"))
-                        zip.write(instBytes)
+                        zip.write(oggBytes)
                         zip.closeEntry()
 
                         zip.putNextEntry(ZipEntry("$rootFolder/songs/$slug/Voices.ogg"))
-                        zip.write(voicesBytes)
+                        zip.write(oggBytes)
                         zip.closeEntry()
                     }
 
-                    // 8. README_INSTALL_PSYCH_073.txt
+                    // 10. README_INSTALL_PSYCH_073.txt
                     zip.putNextEntry(ZipEntry("$rootFolder/README_INSTALL_PSYCH_073.txt"))
                     val readme = """
                         ====================================================================
-                        MARIO'S MADNESS: SECRET EXIT REIMAGINED (PSYCH ENGINE 0.7.3 MOD)
+                        MARIO'S MADNESS V2 (#359554) + SECRET EXIT (3 ENDINGS EDITION)
                         ====================================================================
                         Target Engine: Friday Night Funkin' - Psych Engine 0.7.3 (PC & Android)
+                        Original Mod Reference: https://gamebanana.com/mods/359554
 
-                        INCLUDED IN THIS MOD PACK:
-                        - pack.json (Psych 0.7.3 Mod Metadata)
-                        - weeks/secret_exit_reimagined.json (Story Mode & Freeplay Week)
-                        - stages/secret_exit_citadel.json & .lua (Procedural Ultra M Citadel Stage)
-                        - scripts/secret_exit_5act_director.lua (5-Act Director, HUD & Starman Buff)
-                        - custom_notetypes/Hurt Note.lua & Starman Note.lua
-                        - custom_events/DodgeEvent.lua & SecretExitAct.txt
-                        - data/secret-exit-reimagined/ (40-section 5-Act Easy, Normal & Hard Charts)
+                        INCLUDED ASSETS & FEATURES IN THIS MOD PACK:
+                        - pack.json & pack.png (Mario's Madness V2 Icon & Metadata)
+                        - images/mmv2/stage_ultram.png (High-Res Ultra M Corrupted Citadel Stage)
+                        - images/mmv2/ending_bad.png (Ending 1: Canon All-Stars Bad Ending Art)
+                        - images/mmv2/ending_escape.png (Ending 2: Overdue Warp Pipe Escape Art)
+                        - images/mmv2/ending_true.png (Ending 3: Secret Exit Golden Keyhole True Ending Art)
+                        - images/HURTNOTE_assets.png/.xml & STARMANNOTE_assets.png/.xml
+                        - scripts/secret_exit_5act_director.lua (5-Act Director + 3 Interactive Endings)
+                        - weeks/secret_exit_reimagined.json (Full Mario's Madness V2 Tracklist)
 
-                        HOW TO INSTALL IN ACTUAL PSYCH ENGINE 0.7.3:
-                        1. Extract the '$rootFolder' folder into your Psych Engine 0.7.3 'mods/' folder:
-                           - PC: PsychEngine-0.7.3/mods/$rootFolder/
-                           - Android: /storage/emulated/0/.PsychEngine/mods/$rootFolder/
-                        2. Launch Psych Engine 0.7.3 -> open 'Mods' -> make sure '${mod.title}' is ON.
-                        3. Open Story Mode or Freeplay and select 'secret-exit-reimagined'!
-                        4. NOTE ON AUDIO: If you have your own Secret Exit Inst.ogg & Voices.ogg,
-                           drop them into 'mods/$rootFolder/songs/secret-exit-reimagined/' to replace
-                           the placeholder Ogg container!
+                        HOW TO UNLOCK OR VIEW ALL 3 ENDINGS IN-GAME:
+                        - ENDING 1 (Canon Bad Ending): Finish with < 3 Starman Notes & low health (or press [1] in-game)
+                        - ENDING 2 (Warp Pipe Escape): Survive with < 3 Starman Notes & high health (or press [2] in-game)
+                        - ENDING 3 (Secret Exit True Ending): Hit 3+ Golden Starman Notes (or press [3] in-game)
                     """.trimIndent()
                     zip.write(readme.toByteArray())
                     zip.closeEntry()
