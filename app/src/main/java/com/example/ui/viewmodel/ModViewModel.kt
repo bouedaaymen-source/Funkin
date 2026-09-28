@@ -208,14 +208,18 @@ class ModViewModel(application: Application) : AndroidViewModel(application) {
         lore: String,
         tags: List<String>,
         colorHex: Long,
-        customSongsEncoded: String = ""
+        customSongsEncoded: String = "",
+        launchAfterCreate: Boolean = false
     ) {
         viewModelScope.launch {
-            repository.addCustomMod(
+            val newId = repository.addCustomMod(
                 title, subtitle, author, version, engine, downloadSize,
                 category, difficulty, downloadUrl, description, lore, tags, colorHex,
                 customSongsEncoded
             )
+            if (launchAfterCreate) {
+                psychEngineModId.value = newId
+            }
         }
     }
 

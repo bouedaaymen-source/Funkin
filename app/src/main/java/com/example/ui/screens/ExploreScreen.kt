@@ -332,19 +332,41 @@ fun ExploreScreen(
                                 }
                             }
 
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = Color(featuredMod.mod.colorHex).copy(alpha = 0.2f),
-                                border = BorderStroke(1.dp, Color(featuredMod.mod.colorHex)),
+                            Column(
+                                horizontalAlignment = Alignment.End,
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
                                 modifier = Modifier.padding(start = 8.dp)
                             ) {
-                                Text(
-                                    text = "VIEW",
-                                    color = Color(featuredMod.mod.colorHex),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Black,
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                                )
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = FnfGreen,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .clickable { onLaunchPsychClick(featuredMod.mod.id) }
+                                        .testTag("featured_play_073_btn")
+                                ) {
+                                    Text(
+                                        text = "▶ PLAY 0.7.3",
+                                        color = FnfDarkBg,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Black,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = Color(featuredMod.mod.colorHex).copy(alpha = 0.2f),
+                                    border = BorderStroke(1.dp, Color(featuredMod.mod.colorHex))
+                                ) {
+                                    Text(
+                                        text = "DETAILS",
+                                        color = Color(featuredMod.mod.colorHex),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Black,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                                    )
+                                }
                             }
                         }
                     }

@@ -136,7 +136,7 @@ class ModRepository(private val modDao: ModDao) {
         tags: List<String>,
         colorHex: Long,
         customSongsEncoded: String = ""
-    ) {
+    ): String {
         val id = "custom-${title.lowercase().replace(" ", "-").replace("[^a-z0-9-]".toRegex(), "")}-${System.currentTimeMillis() % 10000}"
         val entity = CustomModEntity(
             id = id,
@@ -156,6 +156,14 @@ class ModRepository(private val modDao: ModDao) {
             colorHex = colorHex
         )
         modDao.insertCustomMod(entity)
+        modDao.upsertTracking(
+            UserModTrackingEntity(
+                modId = id,
+                downloadStatus = "DOWNLOADED",
+                downloadProgress = 100
+            )
+        )
+        return id
     }
 
     suspend fun deleteCustomMod(id: String) {
@@ -168,7 +176,28 @@ class ModRepository(private val modDao: ModDao) {
     }
 
     private fun entityToFnfMod(entity: CustomModEntity): FnfMod {
-        val tags = entity.tagsJoined.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        val rawTags = entity.tagsJoined.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        val visibleTags = rawTags.filterNot { it.startsWith("MECH:") || it.startsWith("CHAR:") }
+        val customMechanics = rawTags
+            .filter { it.startsWith("MECH:") }
+            .map { it.removePrefix("MECH:").trim() }
+            .filter { it.isNotBlank() }
+
+        val customCharacters = rawTags
+            .filter { it.startsWith("CHAR:") }
+            .mapNotNull { entry ->
+                val parts = entry.removePrefix("CHAR:").split("~")
+                if (parts.isNotEmpty()) {
+                    ModCharacter(
+                        name = parts.getOrNull(0)?.ifBlank { entity.author } ?: entity.author,
+                        role = parts.getOrNull(1)?.ifBlank { "Main Opponent" } ?: "Main Opponent",
+                        iconEmoji = parts.getOrNull(2)?.ifBlank { "🍄" } ?: "🍄",
+                        description = parts.getOrNull(3)?.ifBlank { "Custom character built in FNF Mod Maker Studio." }
+                            ?: "Custom character built in FNF Mod Maker Studio."
+                    )
+                } else null
+            }
+
         // Parse custom songs if encoded in mirrorUrl as SONGS:Title~BPM~Diff~Opp|...
         val parsedSongs = if (entity.mirrorUrl.startsWith("SONGS:")) {
             entity.mirrorUrl.removePrefix("SONGS:")
@@ -194,6 +223,22 @@ class ModRepository(private val modDao: ModDao) {
             )
         }
 
+        val finalMechanics = if (customMechanics.isNotEmpty()) {
+            listOf("Locked Stable Engine: ${entity.engine}") + customMechanics
+        } else {
+            listOf(
+                "Locked Stable Engine: ${entity.engine}",
+                "Lua & HScript Version Verified",
+                "Dodge & Custom NoteTypes Ready"
+            )
+        }
+
+        val finalCharacters = customCharacters.ifEmpty {
+            listOf(
+                ModCharacter(entity.author, "Mod Creator", "🍄", "Uploaded cartridge verified for ${entity.engine}.")
+            )
+        }
+
         return FnfMod(
             id = entity.id,
             title = entity.title,
@@ -206,7 +251,7 @@ class ModRepository(private val modDao: ModDao) {
             lastUpdated = "Verified Stable",
             rating = 5.0f,
             downloadCount = "10K",
-            tags = (listOf("Uploaded Cartridge", "Stable: ${entity.engine}") + tags).distinct(),
+            tags = (listOf("Uploaded Cartridge", "Stable: ${entity.engine}") + visibleTags).distinct(),
             category = entity.category,
             difficulty = entity.difficulty,
             colorHex = entity.colorHex,
@@ -215,14 +260,8 @@ class ModRepository(private val modDao: ModDao) {
             downloadUrl = entity.downloadUrl,
             mirrorUrl = entity.downloadUrl,
             songs = finalSongs,
-            mechanics = listOf(
-                "Locked Stable Engine: ${entity.engine}",
-                "Lua & HScript Version Verified",
-                "Dodge & Custom NoteTypes Ready"
-            ),
-            characters = listOf(
-                ModCharacter(entity.author, "Mod Creator", "🍄", "Uploaded cartridge verified for ${entity.engine}.")
-            ),
+            mechanics = finalMechanics,
+            characters = finalCharacters,
             platforms = listOf("Android (${entity.engine} APK)", "Windows"),
             isCustomUserMod = true
         )

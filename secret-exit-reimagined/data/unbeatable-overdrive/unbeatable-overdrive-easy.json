@@ -1,0 +1,40 @@
+{
+  "song": {
+    "song": "unbeatable-overdrive",
+    "notes": [
+      {
+        "sectionBeats": 4,
+        "sectionNotes": [
+          [0.0, 3, 0],
+          [615.38, 1, 0]
+        ],
+        "mustHitSection": false,
+        "gfSection": false,
+        "bpm": 195,
+        "changeBPM": false,
+        "altAnim": false
+      },
+      {
+        "sectionBeats": 4,
+        "sectionNotes": [
+          [1230.76, 2, 0],
+          [1846.15, 0, 0, "Starman Note"]
+        ],
+        "mustHitSection": true,
+        "gfSection": false,
+        "bpm": 195,
+        "changeBPM": false,
+        "altAnim": false
+      }
+    ],
+    "events": [],
+    "bpm": 195,
+    "needsVoices": true,
+    "speed": 2.2,
+    "player1": "bf",
+    "player2": "dad",
+    "gfVersion": "gf",
+    "stage": "secret_exit_citadel",
+    "validScore": true
+  }
+}

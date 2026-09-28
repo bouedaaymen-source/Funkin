@@ -1,0 +1,53 @@
+{
+  "song": {
+    "song": "starman-redemption",
+    "notes": [
+      {
+        "sectionBeats": 4,
+        "sectionNotes": [
+          [0.0, 0, 0],
+          [162.16, 1, 0],
+          [324.32, 2, 0],
+          [486.48, 3, 0],
+          [648.64, 2, 0],
+          [810.81, 1, 0],
+          [972.97, 0, 160.0]
+        ],
+        "mustHitSection": false,
+        "gfSection": false,
+        "bpm": 185,
+        "changeBPM": false,
+        "altAnim": false
+      },
+      {
+        "sectionBeats": 4,
+        "sectionNotes": [
+          [1297.29, 0, 0],
+          [1459.45, 1, 0],
+          [1621.62, 2, 0],
+          [1783.78, 3, 0],
+          [1945.94, 1, 0, "Starman Note"],
+          [2108.10, 2, 0],
+          [2270.27, 3, 160.0]
+        ],
+        "mustHitSection": true,
+        "gfSection": false,
+        "bpm": 185,
+        "changeBPM": false,
+        "altAnim": false
+      }
+    ],
+    "events": [
+      [0.0, [["SecretExitAct", "4", "STARMAN REDEMPTION"]]],
+      [1297.29, [["DodgeEvent", "0.85", "SPACE"]]]
+    ],
+    "bpm": 185,
+    "needsVoices": true,
+    "speed": 3.0,
+    "player1": "bf",
+    "player2": "pico",
+    "gfVersion": "gf",
+    "stage": "secret_exit_citadel",
+    "validScore": true
+  }
+}

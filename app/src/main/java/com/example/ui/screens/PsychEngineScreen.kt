@@ -104,6 +104,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.FullModDetail
+import com.example.data.psych.Psych073ModBuilder
 import com.example.ui.theme.FnfBorder
 import com.example.ui.theme.FnfCyan
 import com.example.ui.theme.FnfDarkBg
@@ -563,10 +564,10 @@ fun PsychEngineScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Mode Switcher: Playable Engine vs APK Bridge & Mod Pack Folder
+                // Mode Switcher: Playable Engine vs 0.7.3 Lua & Chart Studio vs APK Bridge
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
@@ -579,7 +580,7 @@ fun PsychEngineScreen(
                             .testTag("tab_psych_runtime")
                     ) {
                         Row(
-                            modifier = Modifier.padding(vertical = 6.dp, horizontal = 10.dp),
+                            modifier = Modifier.padding(vertical = 6.dp, horizontal = 6.dp),
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -587,13 +588,44 @@ fun PsychEngineScreen(
                                 imageVector = Icons.Filled.PlayArrow,
                                 contentDescription = null,
                                 tint = if (activeSection == 0) FnfCyan else FnfTextMuted,
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier.size(14.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
-                                text = "0.7.3 PLAYABLE STAGE",
+                                text = "0.7.3 STAGE",
                                 color = if (activeSection == 0) FnfCyan else FnfTextSecondary,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (activeSection == 2) FnfYellow.copy(alpha = 0.22f) else FnfSurface,
+                        border = BorderStroke(1.dp, if (activeSection == 2) FnfYellow else FnfBorder),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { activeSection = 2 }
+                            .testTag("tab_psych_073_studio")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 6.dp, horizontal = 6.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Code,
+                                contentDescription = null,
+                                tint = if (activeSection == 2) FnfYellow else FnfTextMuted,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "0.7.3 LUA/CHART",
+                                color = if (activeSection == 2) FnfYellow else FnfTextSecondary,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Black
                             )
                         }
@@ -610,7 +642,7 @@ fun PsychEngineScreen(
                             .testTag("tab_psych_apk_bridge")
                     ) {
                         Row(
-                            modifier = Modifier.padding(vertical = 6.dp, horizontal = 10.dp),
+                            modifier = Modifier.padding(vertical = 6.dp, horizontal = 6.dp),
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -618,13 +650,13 @@ fun PsychEngineScreen(
                                 imageVector = Icons.Filled.Android,
                                 contentDescription = null,
                                 tint = if (activeSection == 1) FnfPurple else FnfTextMuted,
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier.size(14.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
-                                text = "EXTERNAL APK & MOD PACK",
+                                text = "EXPORT .ZIP/APK",
                                 color = if (activeSection == 1) FnfPurple else FnfTextSecondary,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Black
                             )
                         }
@@ -640,6 +672,14 @@ fun PsychEngineScreen(
                 exportedModPath = exportedModPath,
                 installedPackage = installedPsychPackage,
                 onLaunchEmbedded = { activeSection = 0 }
+            )
+        } else if (activeSection == 2) {
+            // SECTION 2: Psych Engine 0.7.3 Lua & JSON Chart Inspector / Builder
+            Psych073StudioSection(
+                detail = detail,
+                currentSong = currentSong,
+                exportedModPath = exportedModPath,
+                onPlayStage = { activeSection = 0 }
             )
         } else {
             // SECTION 0: Playable Psych Engine 0.7.3 Gameplay Highway
@@ -1533,107 +1573,236 @@ fun findInstalledPsychEnginePackage(context: Context): String? {
 }
 
 /**
- * Generates an authentic Psych Engine 0.7.3 mod directory & pack.json on disk for the downloaded mod.
+ * Interactive Psych Engine 0.7.3 Lua Script, Custom NoteTypes & Chart JSON Inspector + Exporter
  */
-fun exportModToPsychFolder(context: Context, detail: FullModDetail): String {
-    return try {
-        val baseDir = context.getExternalFilesDir(null) ?: context.filesDir
-        val modDir = File(baseDir, "PsychEngine/mods/${detail.mod.id}")
-        File(modDir, "data").mkdirs()
-        File(modDir, "songs").mkdirs()
-        File(modDir, "custom_notetypes").mkdirs()
-        File(modDir, "custom_events").mkdirs()
-        File(modDir, "stages").mkdirs()
+@Composable
+private fun Psych073StudioSection(
+    detail: FullModDetail,
+    currentSong: com.example.data.model.SongItem,
+    exportedModPath: String,
+    onPlayStage: () -> Unit
+) {
+    val context = LocalContext.current
+    val mod = detail.mod
+    var selectedFileTab by remember { mutableIntStateOf(0) }
+    var enableHealthDrain by remember { mutableStateOf(true) }
+    var enableBeatZoom by remember { mutableStateOf(true) }
 
-        val packFile = File(modDir, "pack.json")
-        val packContent = """
-            {
-              "name": "${detail.mod.title}",
-              "description": "${detail.mod.subtitle}",
-              "restart": false,
-              "runsGlobally": false,
-              "apiVersion": "0.7.3"
+    val savePsych073ZipLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val ok = Psych073ModBuilder.writePsych073ModZipToUri(
+                context = context,
+                targetUri = uri,
+                detail = detail,
+                enableHealthDrain = enableHealthDrain,
+                enableBeatZoom = enableBeatZoom
+            )
+            if (ok) {
+                Toast.makeText(
+                    context,
+                    "Exported working Psych Engine 0.7.3 Mod (.ZIP)!",
+                    Toast.LENGTH_LONG
+                ).show()
             }
-        """.trimIndent()
-        packFile.writeText(packContent)
-        modDir.absolutePath
-    } catch (e: Exception) {
-        "/storage/emulated/0/.PsychEngine/mods/${detail.mod.id}"
+        }
+    }
+
+    val fileTabs = listOf(
+        "pack.json",
+        "scripts/secret_exit_5act_director.lua",
+        "stages/secret_exit_citadel.lua",
+        "custom_notetypes/Hurt Note.lua",
+        "custom_notetypes/Starman Note.lua",
+        "custom_events/DodgeEvent.lua",
+        "data/${Psych073ModBuilder.slugify(currentSong.title)}-hard.json",
+        "weeks/secret_exit_reimagined.json"
+    )
+
+    val activeFileContent = remember(selectedFileTab, detail, currentSong, enableHealthDrain, enableBeatZoom) {
+        when (selectedFileTab) {
+            0 -> Psych073ModBuilder.generatePackJson(detail)
+            1 -> Psych073ModBuilder.generateSecretExitDirectorLua(mod.title, enableHealthDrain, enableBeatZoom)
+            2 -> Psych073ModBuilder.generateSecretExitStageLua()
+            3 -> Psych073ModBuilder.generateHurtNoteLua()
+            4 -> Psych073ModBuilder.generateStarmanNoteLua()
+            5 -> Psych073ModBuilder.generateDodgeEventLua()
+            6 -> Psych073ModBuilder.generateChartJson(currentSong, "hard", includeHurtNotes = true)
+            else -> Psych073ModBuilder.generateWeekJson(detail)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = FnfSurface),
+            border = BorderStroke(1.5.dp, FnfCyan)
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Filled.Build, contentDescription = null, tint = FnfCyan, modifier = Modifier.size(22.dp))
+                    Column {
+                        Text(
+                            text = "PSYCH ENGINE 0.7.3 WORKING MOD BUILDER",
+                            color = FnfCyan,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                        Text(
+                            text = "100% compliant with Psych Engine 0.7.3 (PlayState sectionNotes, Lua 5.1, Weeks & Ogg Audio)",
+                            color = FnfTextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    PsychTogglePill(
+                        label = "Lua Health Drain (0.7.3)",
+                        active = enableHealthDrain,
+                        activeColor = FnfRed,
+                        onClick = { enableHealthDrain = !enableHealthDrain }
+                    )
+                    PsychTogglePill(
+                        label = "Beat Camera Zoom",
+                        active = enableBeatZoom,
+                        activeColor = FnfYellow,
+                        onClick = { enableBeatZoom = !enableBeatZoom }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val zipName = "${Psych073ModBuilder.slugify(mod.id)}-psych-0.7.3-working.zip"
+                            savePsych073ZipLauncher.launch(zipName)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("export_working_psych073_zip_btn"),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = FnfGreen, contentColor = FnfDarkBg)
+                    ) {
+                        Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("EXPORT 0.7.3 MOD (.ZIP)", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                    }
+
+                    Button(
+                        onClick = {
+                            Psych073ModBuilder.exportCompletePsych073ModToDisk(
+                                context,
+                                detail,
+                                enableHealthDrain,
+                                enableBeatZoom
+                            )
+                            Toast.makeText(
+                                context,
+                                "Rebuilt Psych 0.7.3 files in $exportedModPath",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            onPlayStage()
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = FnfCyan, contentColor = FnfDarkBg)
+                    ) {
+                        Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("TEST IN 0.7.3 STAGE", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                    }
+                }
+            }
+        }
+
+        // File selector strip
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            fileTabs.forEachIndexed { index, tabName ->
+                val isSelected = selectedFileTab == index
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isSelected) FnfYellow.copy(alpha = 0.2f) else FnfSurface,
+                    border = BorderStroke(1.dp, if (isSelected) FnfYellow else FnfBorder),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { selectedFileTab = index }
+                ) {
+                    Text(
+                        text = tabName,
+                        color = if (isSelected) FnfYellow else FnfTextSecondary,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
+            }
+        }
+
+        // Code viewer for the selected Psych 0.7.3 file
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFF090B14),
+            border = BorderStroke(1.dp, FnfBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    text = "FILE: ${fileTabs[selectedFileTab]} (Psych Engine 0.7.3 Schema)",
+                    color = FnfYellow,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = activeFileContent,
+                    color = FnfGreen,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace,
+                    lineHeight = 15.sp
+                )
+            }
+        }
     }
 }
 
 /**
- * Writes a complete, standalone Psych Engine Mod Pack (.ZIP) directly to the user-chosen URI
- * so users in Algeria or offline environments can save & share mods without external web links.
+ * Generates an authentic Psych Engine 0.7.3 mod directory & pack.json on disk for the downloaded mod.
+ */
+fun exportModToPsychFolder(context: Context, detail: FullModDetail): String {
+    return Psych073ModBuilder.exportCompletePsych073ModToDisk(context, detail)
+}
+
+/**
+ * Writes a complete, standalone Psych Engine 0.7.3 Mod Pack (.ZIP) directly to the user-chosen URI
+ * so users can install & play it in Psych Engine 0.7.3 without any missing chart or audio errors.
  */
 fun writeModPackZipToUri(context: Context, targetUri: Uri, detail: FullModDetail): Boolean {
-    return try {
-        val mod = detail.mod
-        context.contentResolver.openOutputStream(targetUri)?.use { rawOut ->
-            ZipOutputStream(rawOut).use { zip ->
-                // 1. pack.json
-                zip.putNextEntry(ZipEntry("${mod.id}/pack.json"))
-                val packJson = """
-                    {
-                      "name": "${mod.title}",
-                      "description": "${mod.subtitle}",
-                      "restart": false,
-                      "runsGlobally": false,
-                      "stablePsychEngine": "${mod.engine}",
-                      "author": "${mod.author}",
-                      "version": "${mod.version}"
-                    }
-                """.trimIndent()
-                zip.write(packJson.toByteArray())
-                zip.closeEntry()
-
-                // 2. weeks/week_manifest.json
-                zip.putNextEntry(ZipEntry("${mod.id}/weeks/week_${mod.id}.json"))
-                val songsArray = mod.songs.joinToString(",\n") { s ->
-                    """    ["${s.title}", "${s.opponent}", [255, 30, 56]]"""
-                }
-                val weekJson = """
-                    {
-                      "songs": [
-                    $songsArray
-                      ],
-                      "weekCharacters": ["dad", "bf", "gf"],
-                      "weekBackground": "stage",
-                      "storyName": "${mod.title}",
-                      "weekName": "${mod.title}",
-                      "freeplayColor": [255, 30, 56],
-                      "startUnlocked": true,
-                      "hideStoryMode": false,
-                      "hideFreeplay": false,
-                      "difficulties": "Easy, Normal, Hard"
-                    }
-                """.trimIndent()
-                zip.write(weekJson.toByteArray())
-                zip.closeEntry()
-
-                // 3. Each song's chart & Lua script
-                mod.songs.forEach { song ->
-                    val slug = song.title.lowercase().replace(" ", "-")
-                    zip.putNextEntry(ZipEntry("${mod.id}/data/$slug/$slug-hard.json"))
-                    val chartJson = """
-                        {
-                          "song": {
-                            "song": "${song.title}",
-                            "bpm": ${song.bpm},
-                            "speed": 2.9,
-                            "player1": "bf",
-                            "player2": "${song.opponent}",
-                            "validScore": true
-                          }
-                        }
-                    """.trimIndent()
-                    zip.write(chartJson.toByteArray())
-                    zip.closeEntry()
-                }
-            }
-        }
-        true
-    } catch (e: Exception) {
-        false
-    }
+    return Psych073ModBuilder.writePsych073ModZipToUri(context, targetUri, detail)
 }
