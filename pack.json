@@ -1,0 +1,8 @@
+{
+  "name": "Mario's Madness: Secret Exit Reimagined",
+  "description": "5-Act Finale Reimagined for actual Psych Engine 0.7.3! Help BF & GF escape Ultra M's cursed cartridge across 5 Acts with procedural Citadel stage, Fire Mario Notes, Starman Notes & Pipe Dodge events.",
+  "restart": false,
+  "runsGlobally": false,
+  "color": [255, 24, 58],
+  "discordRPC": "863222024192262205"
+}

@@ -200,7 +200,7 @@ object Psych073ModBuilder {
                 setHealthBarColors('FF183A', '00E5FF')
 
                 -- Top Act Banner Text
-                makeLuaText('actBannerTxt', 'ACT I • THE CORRUPTED CITADEL (VS ULTRA M)', 1280, 0, 14)
+                makeLuaText('actBannerTxt', 'ACT I - THE CORRUPTED CITADEL (VS ULTRA M)', 1280, 0, 14)
                 setTextSize('actBannerTxt', 22)
                 setTextColor('actBannerTxt', 'FF183A')
                 setTextBorder('actBannerTxt', 2, '000000')
@@ -209,7 +209,7 @@ object Psych073ModBuilder {
                 addLuaText('actBannerTxt')
 
                 -- Bottom Secret Exit 0.7.3 Status Bar
-                makeLuaText('seHudStatus', '${escapeLua(modTitle)} • Psych Engine ' .. version .. ' [TRUE ENDING ROUTE]', 1280, 0, 680)
+                makeLuaText('seHudStatus', '${escapeLua(modTitle)} | Psych Engine ' .. version .. ' [TRUE ENDING]', 1280, 0, 680)
                 setTextSize('seHudStatus', 16)
                 setTextColor('seHudStatus', 'FFD740')
                 setTextBorder('seHudStatus', 1.5, '000000')
@@ -249,7 +249,7 @@ object Psych073ModBuilder {
                 if curBeat == 32 and currentAct < 2 then
                     triggerActChange(
                         2,
-                        'ACT II • DIGITAL PHANTOMS (MR. VIRTUAL & GX)',
+                        'ACT II - DIGITAL PHANTOMS (MR. VIRTUAL & GX)',
                         'ACT II: PARANOIA MIRAGE',
                         'E040FB',
                         '6A0080'
@@ -257,7 +257,7 @@ object Psych073ModBuilder {
                 elseif curBeat == 64 and currentAct < 3 then
                     triggerActChange(
                         3,
-                        'ACT III • BROKEN PIPE AMBUSH (DODGE READY!)',
+                        'ACT III - BROKEN PIPE AMBUSH (DODGE READY!)',
                         'ACT III: LAVA PIPE AMBUSH',
                         'FF9100',
                         'B23C00'
@@ -266,7 +266,7 @@ object Psych073ModBuilder {
                     starmanActive = true
                     triggerActChange(
                         4,
-                        'ACT IV • STARMAN LIBERATION (BF & GF POWER UP!)',
+                        'ACT IV - STARMAN LIBERATION (BF & GF POWER UP!)',
                         'ACT IV: STARMAN AWAKENING!',
                         '00E5FF',
                         '006978'
@@ -276,7 +276,7 @@ object Psych073ModBuilder {
                     starmanActive = true
                     triggerActChange(
                         5,
-                        'ACT V • SECRET EXIT FOUND! (BREAKING THE CARTRIDGE)',
+                        'ACT V - SECRET EXIT FOUND! (BREAKING THE CARTRIDGE)',
                         'FINAL ACT: SECRET EXIT FOUND!',
                         'FFD740',
                         'FFAB00'
@@ -302,17 +302,18 @@ object Psych073ModBuilder {
                 if name == 'SecretExitAct' then
                     local act = tonumber(value1) or 1
                     if act == 1 then
-                        triggerActChange(1, 'ACT I • ' .. value2, 'ACT I: ' .. value2, 'FF183A', '8A0B1E')
+                        triggerActChange(1, 'ACT I - ' .. value2, 'ACT I: ' .. value2, 'FF183A', '8A0B1E')
                     elseif act == 2 then
-                        triggerActChange(2, 'ACT II • ' .. value2, 'ACT II: ' .. value2, 'E040FB', '6A0080')
+                        triggerActChange(2, 'ACT II - ' .. value2, 'ACT II: ' .. value2, 'E040FB', '6A0080')
                     elseif act == 3 then
-                        triggerActChange(3, 'ACT III • ' .. value2, 'ACT III: ' .. value2, 'FF9100', 'B23C00')
+                        triggerActChange(3, 'ACT III - ' .. value2, 'ACT III: ' .. value2, 'FF9100', 'B23C00')
                     elseif act == 4 then
                         starmanActive = true
-                        triggerActChange(4, 'ACT IV • ' .. value2, 'ACT IV: ' .. value2, '00E5FF', '006978')
+                        triggerActChange(4, 'ACT IV - ' .. value2, 'ACT IV: ' .. value2, '00E5FF', '006978')
+                        setHealthBarColors('7C4DFF', '00E676')
                     elseif act == 5 then
                         starmanActive = true
-                        triggerActChange(5, 'ACT V • ' .. value2, 'FINAL ACT: ' .. value2, 'FFD740', 'FFAB00')
+                        triggerActChange(5, 'ACT V - ' .. value2, 'FINAL ACT: ' .. value2, 'FFD740', 'FFAB00')
                     end
                 end
             end
@@ -338,25 +339,24 @@ object Psych073ModBuilder {
     }
 
     /**
-     * Generates `custom_notetypes/Fire Mario Note.lua` for Psych Engine 0.7.3.
-     * Also aliases `Hurt Note` so both work seamlessly.
+     * Generates `custom_notetypes/Hurt Note.lua` for Psych Engine 0.7.3.
      */
     fun generateHurtNoteLua(): String {
         return """
             -- ============================================================================
-            -- Psych Engine 0.7.3 Custom NoteType: Fire Mario Note / Hurt Note
+            -- Psych Engine 0.7.3 Custom NoteType: Hurt Note (Fire Mario Note)
             -- File: custom_notetypes/Hurt Note.lua
+            -- Uses pure Psych Engine 0.7.3 Note properties (no deprecated 0.6.x colorSwap)
             -- ============================================================================
             function onCreate()
                 for i = 0, getProperty('unspawnNotes.length') - 1 do
                     local nt = getPropertyFromGroup('unspawnNotes', i, 'noteType')
                     if nt == 'Hurt Note' or nt == 'Fire Mario Note' then
-                        setPropertyFromGroup('unspawnNotes', i, 'rgbShader.enabled', false)
-                        setPropertyFromGroup('unspawnNotes', i, 'colorSwap.hue', -0.15)
-                        setPropertyFromGroup('unspawnNotes', i, 'colorSwap.saturation', 0.6)
-                        setPropertyFromGroup('unspawnNotes', i, 'hitHealth', '-0.38')
-                        setPropertyFromGroup('unspawnNotes', i, 'missHealth', '0')
+                        setPropertyFromGroup('unspawnNotes', i, 'hitHealth', -0.35)
+                        setPropertyFromGroup('unspawnNotes', i, 'missHealth', 0)
                         setPropertyFromGroup('unspawnNotes', i, 'hitCausesMiss', true)
+                        setPropertyFromGroup('unspawnNotes', i, 'lowPriority', true)
+                        setPropertyFromGroup('unspawnNotes', i, 'multAlpha', 0.82)
                         if getPropertyFromGroup('unspawnNotes', i, 'mustPress') then
                             setPropertyFromGroup('unspawnNotes', i, 'ignoreNote', true)
                         end
@@ -369,7 +369,7 @@ object Psych073ModBuilder {
                     cameraShake('camGame', 0.02, 0.22)
                     cameraFlash('camHUD', 'FF183A', 0.2, true)
                     playSound('cancelMenu', 0.9)
-                    characterPlayAnim('boyfriend', 'hurt', true)
+                    playAnim('boyfriend', 'singLEFTmiss', true)
                     setProperty('boyfriend.specialAnim', true)
                 end
             end
@@ -389,8 +389,8 @@ object Psych073ModBuilder {
             function onCreate()
                 for i = 0, getProperty('unspawnNotes.length') - 1 do
                     if getPropertyFromGroup('unspawnNotes', i, 'noteType') == 'Starman Note' then
-                        setPropertyFromGroup('unspawnNotes', i, 'hitHealth', '0.35')
-                        setPropertyFromGroup('unspawnNotes', i, 'missHealth', '0')
+                        setPropertyFromGroup('unspawnNotes', i, 'hitHealth', 0.35)
+                        setPropertyFromGroup('unspawnNotes', i, 'missHealth', 0)
                         setPropertyFromGroup('unspawnNotes', i, 'ignoreNote', false)
                     end
                 end
@@ -400,7 +400,7 @@ object Psych073ModBuilder {
                 if noteType == 'Starman Note' then
                     addScore(1000)
                     cameraFlash('camHUD', 'FFD740', 0.25, true)
-                    characterPlayAnim('boyfriend', 'hey', true)
+                    playAnim('boyfriend', 'hey', true)
                     setProperty('boyfriend.specialAnim', true)
                     playSound('confirmMenu', 0.75)
                 end
@@ -421,7 +421,7 @@ object Psych073ModBuilder {
             local dodged = false
 
             function onCreatePost()
-                makeLuaText('dodgePromptText', '⚠️ [ PRESS SPACE OR TAP SCREEN TO DODGE ULTRA M! ] ⚠️', 1280, 0, 220)
+                makeLuaText('dodgePromptText', '[ ! PRESS SPACE OR TAP SCREEN TO DODGE ULTRA M ! ]', 1280, 0, 220)
                 setTextSize('dodgePromptText', 28)
                 setTextColor('dodgePromptText', 'FF1E38')
                 setTextBorder('dodgePromptText', 2.5, '000000')
@@ -437,7 +437,7 @@ object Psych073ModBuilder {
                     dodged = false
                     setProperty('dodgePromptText.visible', true)
                     playSound('scrollMenu', 0.9)
-                    local windowSec = tonumber(value1) or 0.80
+                    local windowSec = tonumber(value1) or 0.85
                     runTimer('dodgeResolveTimer', windowSec)
                 end
             end
@@ -447,7 +447,7 @@ object Psych073ModBuilder {
                     dodged = true
                     canDodge = false
                     setProperty('dodgePromptText.visible', false)
-                    characterPlayAnim('boyfriend', 'hey', true)
+                    playAnim('boyfriend', 'hey', true)
                     setProperty('boyfriend.specialAnim', true)
                     addScore(500)
                 end
@@ -461,7 +461,7 @@ object Psych073ModBuilder {
                         setProperty('health', math.max(0.1, getProperty('health') - 0.45))
                         cameraShake('camGame', 0.025, 0.25)
                         cameraFlash('camHUD', 'FF0000', 0.25, true)
-                        characterPlayAnim('boyfriend', 'hurt', true)
+                        playAnim('boyfriend', 'singDOWNmiss', true)
                         setProperty('boyfriend.specialAnim', true)
                     end
                 end
@@ -589,7 +589,7 @@ object Psych073ModBuilder {
                   $allEvents
                 ],
                 "bpm": $bpm,
-                "needsVoices": false,
+                "needsVoices": true,
                 "speed": $speed,
                 "player1": "bf",
                 "player2": "dad",
@@ -611,6 +611,14 @@ object Psych073ModBuilder {
         enableWatermark: Boolean = true
     ): String {
         return generateSecretExitDirectorLua(modTitle, enableHealthDrain, enableBeatZoom)
+    }
+
+    private fun loadBundledOggBytes(context: Context, assetName: String): ByteArray {
+        return try {
+            context.assets.open(assetName).use { it.readBytes() }
+        } catch (_: Exception) {
+            generateMinimalOggBytes()
+        }
     }
 
     /**
@@ -692,10 +700,11 @@ object Psych073ModBuilder {
             File(noteTypesDir, "Hurt Note.lua").writeText(generateHurtNoteLua())
             File(noteTypesDir, "Starman Note.lua").writeText(generateStarmanNoteLua())
             File(eventsDir, "DodgeEvent.lua").writeText(generateDodgeEventLua())
-            File(eventsDir, "DodgeEvent.txt").writeText("Triggers Ultra M's Spacebar / Touch Dodge prompt.\nValue 1: Dodge window in seconds (default 0.80)")
+            File(eventsDir, "DodgeEvent.txt").writeText("Triggers Ultra M's Spacebar / Touch Dodge prompt.\nValue 1: Dodge window in seconds (default 0.85)")
             File(eventsDir, "SecretExitAct.txt").writeText("Switches Secret Exit Reimagined Act (1..5).\nValue 1: Act Number (1-5)\nValue 2: Act Subtitle")
 
-            val oggBytes = generateMinimalOggBytes()
+            val instBytes = loadBundledOggBytes(context, "secret_exit_inst.ogg")
+            val voicesBytes = loadBundledOggBytes(context, "secret_exit_voices.ogg")
             detail.mod.songs.forEach { song ->
                 val slug = slugify(song.title)
                 val songDataDir = File(modDir, "data/$slug").apply { mkdirs() }
@@ -707,8 +716,8 @@ object Psych073ModBuilder {
                 )
 
                 val songAudioDir = File(modDir, "songs/$slug").apply { mkdirs() }
-                File(songAudioDir, "Inst.ogg").writeBytes(oggBytes)
-                File(songAudioDir, "Voices.ogg").writeBytes(oggBytes)
+                File(songAudioDir, "Inst.ogg").writeBytes(instBytes)
+                File(songAudioDir, "Voices.ogg").writeBytes(voicesBytes)
             }
 
             modDir.absolutePath
@@ -730,7 +739,8 @@ object Psych073ModBuilder {
         return try {
             val mod = detail.mod
             val rootFolder = slugify(mod.id)
-            val oggBytes = generateMinimalOggBytes()
+            val instBytes = loadBundledOggBytes(context, "secret_exit_inst.ogg")
+            val voicesBytes = loadBundledOggBytes(context, "secret_exit_voices.ogg")
 
             context.contentResolver.openOutputStream(targetUri)?.use { rawOut ->
                 ZipOutputStream(rawOut).use { zip ->
@@ -801,11 +811,11 @@ object Psych073ModBuilder {
                         zip.closeEntry()
 
                         zip.putNextEntry(ZipEntry("$rootFolder/songs/$slug/Inst.ogg"))
-                        zip.write(oggBytes)
+                        zip.write(instBytes)
                         zip.closeEntry()
 
                         zip.putNextEntry(ZipEntry("$rootFolder/songs/$slug/Voices.ogg"))
-                        zip.write(oggBytes)
+                        zip.write(voicesBytes)
                         zip.closeEntry()
                     }
 

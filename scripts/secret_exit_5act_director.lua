@@ -10,9 +10,6 @@ local enableZoom = true
 local starmanActive = false
 
 function onCreate()
-    -- If custom Inst.ogg is placed in songs/secret-exit-reimagined/, use it automatically;
-    -- otherwise PlayState uses the built-in Psych 0.7.3 audio track defined in the chart JSON
-    -- so the mod NEVER crashes with a missing Inst.ogg error!
     if checkFileExists('songs/secret-exit-reimagined/Inst.ogg') and songPath == 'secret-exit-reimagined' then
         setPropertyFromClass('states.PlayState', 'SONG.song', 'secret-exit-reimagined')
     end
