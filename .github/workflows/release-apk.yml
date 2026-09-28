@@ -22,17 +22,70 @@ jobs:
 
       - name: Synthesize Playable Ogg Vorbis Audio & Package Secret Exit Reimagined (Psych 0.7.3 .ZIP)
         run: |
-          for song in secret-exit-reimagined starman-redemption unbeatable-overdrive; do
-            mkdir -p "secret-exit-reimagined/songs/$song"
-            # Generate real playable 44.1kHz Ogg Vorbis Instrumental (NES Dark Synth Beat)
-            ffmpeg -y -f lavfi -i "aevalsrc='0.25*sin(2*PI*110*t)+0.2*sin(2*PI*220*t)*gt(mod(t,0.3),0.15)':s=44100:d=45" \
-              -c:a libvorbis -q:a 4 "secret-exit-reimagined/songs/$song/Inst.ogg"
-            # Generate real playable 44.1kHz Ogg Vorbis Voices (Chiptune Lead Duel)
-            ffmpeg -y -f lavfi -i "aevalsrc='0.22*sin(2*PI*(330+110* floor(mod(t*4,4)))*t)*gt(mod(t,0.15),0.05)':s=44100:d=45" \
-              -c:a libvorbis -q:a 4 "secret-exit-reimagined/songs/$song/Voices.ogg"
-          done
+          python3 - << 'EOF'
+          import math, os, struct, subprocess, wave, zipfile
 
-          zip -r Secret-Exit-Reimagined-Psych-0.7.3.zip secret-exit-reimagined/
+          songs = [
+              ("secret-exit-reimagined", 200),
+              ("starman-redemption", 185),
+              ("unbeatable-overdrive", 195),
+          ]
+
+          sample_rate = 22050
+          duration_sec = 36
+          total_samples = sample_rate * duration_sec
+
+          def make_wav(path, bpm, is_voices):
+              beat_sec = 60.0 / bpm
+              notes_hz = [220.0, 261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 493.88]
+              with wave.open(path, "w") as w:
+                  w.setnchannels(1)
+                  w.setsampwidth(2)
+                  w.setframerate(sample_rate)
+                  frames = bytearray()
+                  for i in range(total_samples):
+                      t = i / float(sample_rate)
+                      step = int(t / (beat_sec / 2.0))
+                      if is_voices:
+                          freq = notes_hz[step % len(notes_hz)] * (1.5 if (step // 8) % 2 == 1 else 1.0)
+                          gate = 1.0 if (t % (beat_sec / 2.0)) < (beat_sec * 0.38) else 0.0
+                          val = int(9000 * gate * math.sin(2.0 * math.pi * freq * t))
+                      else:
+                          bass_freq = notes_hz[(step // 2) % 4] * 0.5
+                          kick = math.sin(2.0 * math.pi * 65.0 * t) * math.exp(-((t % beat_sec) * 14.0))
+                          bass = math.sin(2.0 * math.pi * bass_freq * t)
+                          val = int(10000 * (0.55 * bass + 0.45 * kick))
+                      val = max(-32000, min(32000, val))
+                      frames.extend(struct.pack("<h", val))
+                  w.writeframes(bytes(frames))
+
+          for slug, bpm in songs:
+              song_dir = os.path.join("secret-exit-reimagined", "songs", slug)
+              os.makedirs(song_dir, exist_ok=True)
+              inst_wav = os.path.join(song_dir, "Inst.wav")
+              voices_wav = os.path.join(song_dir, "Voices.wav")
+              inst_ogg = os.path.join(song_dir, "Inst.ogg")
+              voices_ogg = os.path.join(song_dir, "Voices.ogg")
+
+              make_wav(inst_wav, bpm, False)
+              make_wav(voices_wav, bpm, True)
+
+              subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", inst_wav, inst_ogg], check=False)
+              subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", voices_wav, voices_ogg], check=False)
+
+              if os.path.exists(inst_ogg) and os.path.getsize(inst_ogg) > 0:
+                  os.remove(inst_wav)
+              if os.path.exists(voices_ogg) and os.path.getsize(voices_ogg) > 0:
+                  os.remove(voices_wav)
+
+          with zipfile.ZipFile("Secret-Exit-Reimagined-Psych-0.7.3.zip", "w", zipfile.ZIP_DEFLATED) as zf:
+              for root, _, files in os.walk("secret-exit-reimagined"):
+                  for file in sorted(files):
+                      full_path = os.path.join(root, file)
+                      zf.write(full_path, full_path)
+
+          print("Successfully built Secret-Exit-Reimagined-Psych-0.7.3.zip!")
+          EOF
 
           if ls apk_chunks/apk_part_*.b64 1> /dev/null 2>&1; then
             echo "Reconstructing signed APK from apk_chunks..."
@@ -47,8 +100,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Secret-Exit-Reimagined-Psych-0.7.3.zip FunkinMods-MarioMadness-V2.apk "secret-exit-reimagined/songs/*/*.ogg"
-          git diff --staged --quiet || (git commit -m "chore: publish Secret-Exit-Reimagined-Psych-0.7.3.zip & APK [skip ci]" && git push)
+          git add -f Secret-Exit-Reimagined-Psych-0.7.3.zip FunkinMods-MarioMadness-V2.apk secret-exit-reimagined/
+          git diff --staged --quiet || (git commit -m "chore: publish Secret-Exit-Reimagined-Psych-0.7.3.zip & APK [skip ci]" && git pull --rebase && git push)
 
       - name: Upload Psych 0.7.3 Mod ZIP & APK to GitHub Actions Artifacts
         uses: actions/upload-artifact@v4
