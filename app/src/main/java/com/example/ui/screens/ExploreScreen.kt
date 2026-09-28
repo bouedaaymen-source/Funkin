@@ -76,6 +76,7 @@ import com.example.R
 import com.example.data.model.DefaultCatalog
 import com.example.data.model.FullModDetail
 import com.example.data.model.SongItem
+import com.example.data.psych.MarioMadness3DModelEngine
 import com.example.data.psych.MarioMadnessAudioEngine
 import com.example.data.psych.Psych073ModBuilder
 import com.example.ui.components.ModCard
@@ -136,11 +137,24 @@ fun ExploreScreen(
     var selectedWorldIndex by remember { mutableIntStateOf(6) } // Default to World 7: Ultra M's Citadel & Secret Exit (3 Endings)
     var previewingSong by remember { mutableStateOf<SongItem?>(null) }
 
-    // 268 MB Masterpiece ZIP Exporter State
+    // 285 MB 3D Masterpiece ZIP Exporter State
     var isPacking268MbZip by remember { mutableStateOf(false) }
     var packedMbProgress by remember { mutableIntStateOf(0) }
-    var totalMbTarget by remember { mutableIntStateOf(268) }
+    var totalMbTarget by remember { mutableIntStateOf(285) }
     var currentPackedFile by remember { mutableStateOf("") }
+
+    // Interactive 3D Character Model Showcase State
+    var showcase3DAct by remember { mutableIntStateOf(1) }
+    var showcase3DPose by remember { mutableIntStateOf(0) }
+    var showcaseStarman by remember { mutableStateOf(true) }
+    var showcaseTick by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(32L)
+            showcaseTick++
+        }
+    }
 
     val saveMasterpieceZipLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/zip")
@@ -167,7 +181,7 @@ fun ExploreScreen(
                     if (ok) {
                         Toast.makeText(
                             context,
-                            "Saved 268 MB Mario's Madness V2 (#359554) Masterpiece .ZIP to your device!",
+                            "Saved 285 MB Mario's Madness V2 (#359554) 3D Masterpiece .ZIP to your device!",
                             Toast.LENGTH_LONG
                         ).show()
                     } else {
@@ -352,7 +366,7 @@ fun ExploreScreen(
                             color = FnfRed
                         ) {
                             Text(
-                                text = "🍄 GAMEBANANA MOD #359554 • 268 MB MASTERPIECE",
+                                text = "🍄 GAMEBANANA MOD #359554 • 285 MB 3D MASTERPIECE",
                                 color = Color.White,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Black,
@@ -423,7 +437,7 @@ fun ExploreScreen(
 
                         Button(
                             onClick = {
-                                saveMasterpieceZipLauncher.launch("marios-madness-v2-359554-masterpiece-268mb.zip")
+                                saveMasterpieceZipLauncher.launch("marios-madness-v2-359554-3d-masterpiece-285mb.zip")
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -437,7 +451,7 @@ fun ExploreScreen(
                             Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(17.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "GET 268 MB .ZIP",
+                                text = "GET 285 MB .ZIP",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Black
                             )
@@ -466,9 +480,9 @@ fun ExploreScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = if (isPacking268MbZip) {
-                                    "PACKING 268 MB MASTERPIECE .ZIP... ($packedMbProgress MB / $totalMbTarget MB)"
+                                    "PACKING 285 MB 3D MASTERPIECE .ZIP... ($packedMbProgress MB / $totalMbTarget MB)"
                                 } else {
-                                    "📦 FULL 268 MB MOD ARCHIVE (GAMEBANANA #359554 + 3 ENDINGS)"
+                                    "📦 FULL 285 MB 3D MOD ARCHIVE (GAMEBANANA #359554 + 3 ENDINGS)"
                                 },
                                 color = if (isPacking268MbZip) FnfYellow else FnfGreen,
                                 fontSize = 11.sp,
@@ -479,7 +493,7 @@ fun ExploreScreen(
                                 text = if (isPacking268MbZip) {
                                     "Streaming: $currentPackedFile"
                                 } else {
-                                    "Includes 29 Songs (Inst.ogg & Voices.ogg), 7 Boss Atlases, Stage PNGs & 3 Ending Cutscenes"
+                                    "Includes 3D Character Atlases (Ultra M, Horror Mario, Mr. Virtual, MX, Starman BF), 29 Songs (NO stress song) & 3 Endings"
                                 },
                                 color = FnfTextSecondary,
                                 fontSize = 11.sp,
@@ -513,6 +527,116 @@ fun ExploreScreen(
                             color = FnfYellow,
                             trackColor = FnfDarkBg
                         )
+                    }
+                }
+            }
+        }
+
+        // 2.5 LIVE 60FPS 3D VOLUMETRIC CHARACTER MODEL SHOWCASE (ULTRA M, MR. VIRTUAL, MX, MR. SYS, STARMAN BF)
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = FnfSurface),
+                border = BorderStroke(1.5.dp, FnfRed)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "🎮 LIVE 3D CHARACTER MODELS (#359554 BOSSES & STARMAN BF)",
+                            color = FnfYellow,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                        Text(
+                            text = "60 FPS 3D RENDER",
+                            color = FnfCyan,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(175.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF0E040A))
+                            .clickable {
+                                showcase3DPose = (showcase3DPose + 1) % 5
+                                MarioMadnessAudioEngine.playVocalNoteBurst(
+                                    scope = scope,
+                                    lane = showcase3DPose % 4,
+                                    isStarman = showcaseStarman
+                                )
+                            }
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.img_mmv2_stage_ultram_1790591016141),
+                            contentDescription = "3D Stage Preview",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0xFF120308).copy(alpha = 0.52f))
+                        )
+                        MarioMadness3DModelEngine.MarioMadness3DStageCanvas(
+                            currentAct = showcase3DAct,
+                            animTick = showcaseTick,
+                            opponentPose = showcase3DPose,
+                            bfPose = showcase3DPose,
+                            starmanActive = showcaseStarman,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val actBossLabels = listOf(
+                            1 to "Act 1: 3D Ultra M",
+                            2 to "Act 2: 3D Mr. Virtual",
+                            3 to "Act 3: 3D MX Titan",
+                            4 to "Act 4: 3D Mr. Sys + Pipe",
+                            5 to "Act 5: 3D Starman Finale"
+                        )
+                        actBossLabels.forEach { (actNum, label) ->
+                            val isSel = showcase3DAct == actNum
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSel) FnfRed.copy(alpha = 0.25f) else FnfSurfaceElevated,
+                                border = BorderStroke(1.dp, if (isSel) FnfRed else FnfBorder),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        showcase3DAct = actNum
+                                        showcase3DPose = (actNum % 4) + 1
+                                    }
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (isSel) FnfYellow else FnfTextSecondary,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Black,
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }

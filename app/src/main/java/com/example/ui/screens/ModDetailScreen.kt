@@ -76,6 +76,7 @@ import com.example.R
 import com.example.data.model.DownloadStatus
 import com.example.data.model.FullModDetail
 import com.example.data.model.SongItem
+import com.example.data.psych.MarioMadness3DModelEngine
 import com.example.data.psych.MarioMadnessAudioEngine
 import com.example.data.psych.Psych073ModBuilder
 import com.example.ui.theme.FnfBorder
@@ -118,7 +119,7 @@ fun ModDetailScreen(
 
     var isPackingZip by remember { mutableStateOf(false) }
     var packedMb by remember { mutableIntStateOf(0) }
-    var totalMbTarget by remember { mutableIntStateOf(268) }
+    var totalMbTarget by remember { mutableIntStateOf(285) }
     var currentPackedFile by remember { mutableStateOf("") }
 
     val saveZipLauncher = rememberLauncherForActivityResult(
@@ -354,7 +355,7 @@ fun ModDetailScreen(
                     Button(
                         onClick = {
                             if (!isPackingZip) {
-                                val zipName = "${Psych073ModBuilder.slugify(mod.id)}-mmv2-268mb-3endings-0.7.3.zip"
+                                val zipName = "${Psych073ModBuilder.slugify(mod.id)}-mmv2-285mb-3d-3endings-0.7.3.zip"
                                 saveZipLauncher.launch(zipName)
                             }
                         },
@@ -368,7 +369,7 @@ fun ModDetailScreen(
                         Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            if (isPackingZip) "PACKING $packedMb/$totalMbTarget MB" else "GET 268MB .ZIP",
+                            if (isPackingZip) "PACKING $packedMb/$totalMbTarget MB" else "GET 285MB .ZIP",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Black
                         )
@@ -557,7 +558,67 @@ private fun OverviewTab(
     mod: com.example.data.model.FnfMod,
     onLaunchStage: () -> Unit
 ) {
+    var previewAct by remember { mutableIntStateOf(1) }
+    var previewPose by remember { mutableIntStateOf(0) }
+    var previewTick by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(32L)
+            previewTick++
+        }
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
+        // Live 3D Volumetric Character Model Stage Preview
+        Text(
+            text = "🎮 3D VOLUMETRIC CHARACTER MODELS (TAP TO ANIMATE POSES & ACTS)",
+            color = FnfCyan,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Black
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = FnfSurface),
+            border = BorderStroke(1.5.dp, FnfRed),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    previewAct = (previewAct % 5) + 1
+                    previewPose = (previewPose + 1) % 5
+                }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(175.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.img_mmv2_stage_ultram_1790591016141),
+                    contentDescription = "3D Stage Model Preview",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF120308).copy(alpha = 0.52f))
+                )
+                MarioMadness3DModelEngine.MarioMadness3DStageCanvas(
+                    currentAct = previewAct,
+                    animTick = previewTick,
+                    opponentPose = previewPose,
+                    bfPose = previewPose,
+                    starmanActive = true,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // 3 Branching Endings Visual Showcase Card
         Text(
             text = "3 PLAYABLE ENDINGS & CUTSCENES (MARIO'S MADNESS V2 #359554)",

@@ -105,6 +105,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.FullModDetail
+import com.example.data.psych.MarioMadness3DModelEngine
 import com.example.data.psych.MarioMadnessAudioEngine
 import com.example.data.psych.Psych073ModBuilder
 import com.example.ui.theme.FnfBorder
@@ -185,6 +186,9 @@ fun PsychEngineScreen(
     var endingDialogueIndex by remember { mutableIntStateOf(0) }
     var bfPoseText by remember { mutableStateOf("IDLE") }
     var bossPoseText by remember { mutableStateOf("ULTRA M") }
+    var animTick by remember { mutableIntStateOf(0) }
+    var opponentPoseIndex by remember { mutableIntStateOf(0) }
+    var bfPoseIndex by remember { mutableIntStateOf(0) }
 
     // Gameplay State
     var isPlaying by remember { mutableStateOf(true) }
@@ -390,6 +394,7 @@ fun PsychEngineScreen(
             spawnAccumulator += deltaMs
             secondAccumulator += deltaMs
             dodgeAccumulator += deltaMs
+            animTick++
 
             if (secondAccumulator >= 1000L) {
                 secondAccumulator -= 1000L
@@ -431,6 +436,7 @@ fun PsychEngineScreen(
             if (spawnAccumulator >= spawnIntervalMs) {
                 spawnAccumulator -= spawnIntervalMs
                 val lane = Random.nextInt(4)
+                opponentPoseIndex = lane + 1
                 val roll = Random.nextFloat()
                 val isStarman = roll < 0.14f // 14% chance of Golden Starman Note (★)
                 val isHurt = !isStarman && luaMechanicsEnabled && roll > 0.88f // 12% chance of Fire Hurt Note
@@ -462,6 +468,7 @@ fun PsychEngineScreen(
                 if (botPlay && !note.isHit && !note.isHurtNote && newProg >= 0.87f) {
                     note.isHit = true
                     laneFlash[note.lane] = 1f
+                    bfPoseIndex = note.lane + 1
                     combo++
                     if (combo > maxCombo) maxCombo = combo
                     totalNotesHit++
@@ -505,6 +512,7 @@ fun PsychEngineScreen(
 
     fun onLanePressed(lane: Int) {
         laneFlash[lane] = 1f
+        bfPoseIndex = lane + 1
         bfPoseText = listOf(" SING LEFT", "SING DOWN", "SING UP", "SING RIGHT")[lane]
         if (botPlay) return
 
@@ -1214,16 +1222,26 @@ fun PsychEngineScreen(
 
                     // Act-Responsive Stage Atmosphere Overlay
                     val actTint = when (currentAct) {
-                        1 -> Color(0xFF1A0308).copy(alpha = 0.74f)
-                        2 -> Color(0xFF1C0426).copy(alpha = 0.74f)
-                        3 -> Color(0xFF240B02).copy(alpha = 0.74f)
-                        4 -> Color(0xFF031A24).copy(alpha = 0.72f)
-                        else -> Color(0xFF1F1602).copy(alpha = 0.68f)
+                        1 -> Color(0xFF1A0308).copy(alpha = 0.56f)
+                        2 -> Color(0xFF1C0426).copy(alpha = 0.56f)
+                        3 -> Color(0xFF240B02).copy(alpha = 0.56f)
+                        4 -> Color(0xFF031A24).copy(alpha = 0.54f)
+                        else -> Color(0xFF1F1602).copy(alpha = 0.50f)
                     }
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(actTint)
+                    )
+
+                    // Live 60FPS 3D Volumetric Mario's Madness V2 Boss, GF & Starman BF Stage Renderer
+                    MarioMadness3DModelEngine.MarioMadness3DStageCanvas(
+                        currentAct = currentAct,
+                        animTick = animTick,
+                        opponentPose = opponentPoseIndex,
+                        bfPose = bfPoseIndex,
+                        starmanActive = starmanStars >= 3,
+                        modifier = Modifier.fillMaxSize()
                     )
 
                     // Live Animated Stage Characters Strip (Opponent vs GF vs Boyfriend/Starman BF)
@@ -1866,7 +1884,7 @@ private fun PsychApkBridgeSection(
     var engineApkInstalledInApp by remember { mutableStateOf(installedPackage != null) }
     var isPackingZip by remember { mutableStateOf(false) }
     var packedMb by remember { mutableIntStateOf(0) }
-    var totalMbTarget by remember { mutableIntStateOf(268) }
+    var totalMbTarget by remember { mutableIntStateOf(285) }
 
     LaunchedEffect(isDownloadingEngineApk) {
         if (isDownloadingEngineApk) {
@@ -2082,7 +2100,7 @@ private fun PsychApkBridgeSection(
                         Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = if (isPackingZip) "PACKING $packedMb/$totalMbTarget MB" else "SAVE 268 MB .ZIP",
+                            text = if (isPackingZip) "PACKING $packedMb/$totalMbTarget MB" else "SAVE 285 MB .ZIP",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Black
                         )
@@ -2293,7 +2311,7 @@ private fun Psych073StudioSection(
     var enableBeatZoom by remember { mutableStateOf(true) }
     var isPackingStudioZip by remember { mutableStateOf(false) }
     var studioPackedMb by remember { mutableIntStateOf(0) }
-    var studioTotalMb by remember { mutableIntStateOf(268) }
+    var studioTotalMb by remember { mutableIntStateOf(285) }
 
     val savePsych073ZipLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/zip")
