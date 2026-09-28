@@ -103,13 +103,15 @@ fun RhythmLabScreen(
         }
     }
 
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     val sampleTracks = remember {
         listOf(
-            BeatSong("Lo-Fight", 130, "VS Whitty"),
-            BeatSong("Release", 150, "Garcello"),
-            BeatSong("Zavodila", 175, "Mid-Fight Masses"),
-            BeatSong("Triple Trouble", 180, "Sonic.EXE"),
-            BeatSong("Expurgation", 215, "The Tricky Mod")
+            BeatSong("Secret Exit", 200, "Mario's Madness: 5 Acts"),
+            BeatSong("All-Stars", 190, "Ultra M Finale"),
+            BeatSong("It's-A-Me", 160, "Horror Mario V2"),
+            BeatSong("Starman Slaughter", 175, "Lava Bridge"),
+            BeatSong("Paranoia", 195, "Mr. Virtual"),
+            BeatSong("Unbeatable", 195, "Mr. Sys Nintendo")
         )
     }
     var selectedTrackIndex by remember { mutableIntStateOf(0) }
@@ -128,7 +130,8 @@ fun RhythmLabScreen(
         label = "speakerPulse"
     )
 
-    fun triggerHaptic() {
+    fun triggerHaptic(lane: Int = 0) {
+        com.example.data.psych.MarioMadnessAudioEngine.playVocalNoteBurst(scope, lane)
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -388,7 +391,7 @@ fun RhythmLabScreen(
                 icon = Icons.Filled.ArrowBack,
                 color = FnfPurple,
                 onTap = {
-                    triggerHaptic()
+                    triggerHaptic(0)
                     onArrowTap("LEFT")
                 },
                 modifier = Modifier.testTag("arrow_left")
@@ -399,7 +402,7 @@ fun RhythmLabScreen(
                 icon = Icons.Filled.ArrowDownward,
                 color = FnfCyan,
                 onTap = {
-                    triggerHaptic()
+                    triggerHaptic(1)
                     onArrowTap("DOWN")
                 },
                 modifier = Modifier.testTag("arrow_down")
@@ -410,7 +413,7 @@ fun RhythmLabScreen(
                 icon = Icons.Filled.ArrowUpward,
                 color = FnfGreen,
                 onTap = {
-                    triggerHaptic()
+                    triggerHaptic(2)
                     onArrowTap("UP")
                 },
                 modifier = Modifier.testTag("arrow_up")
@@ -421,7 +424,7 @@ fun RhythmLabScreen(
                 icon = Icons.Filled.ArrowForward,
                 color = FnfRed,
                 onTap = {
-                    triggerHaptic()
+                    triggerHaptic(3)
                     onArrowTap("RIGHT")
                 },
                 modifier = Modifier.testTag("arrow_right")
