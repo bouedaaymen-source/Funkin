@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "FunkinMods"
+rootProject.name = "The 2090 Town"
 
 include(":app")

@@ -1,6 +1,6 @@
 {
-  "name": "FunkinMods",
-  "description": "Browse, track, download, and manage the latest Friday Night Funkin rhythm game mods, tracklists, mechanics, and engines.",
+  "name": "The 2090 Town",
+  "description": "Official GitHub Page, episode archive, citizen census, and Discord join portal for The Town (#the_town / The 2090 Club) by Twenty Ninety Creative.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

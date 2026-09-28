@@ -4,14 +4,6 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-
-    <queries>
-        <package android:name="com.shadowmario.psychengine" />
-        <package android:name="me.moxie.psychengine" />
-        <package android:name="com.psychengine.fnf" />
-        <package android:name="com.funkin.psychengine" />
-    </queries>
 
     <application
         android:allowBackup="true"

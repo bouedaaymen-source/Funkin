@@ -1,3 +1,0 @@
-Triggers Ultra M's Spacebar / Touch Dodge prompt.
-Value 1: Dodge window in seconds (default 0.85)
-Value 2: Key hint label (default SPACE)

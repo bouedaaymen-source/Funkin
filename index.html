@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Town (🏘️the_town) — The 2090 Club | Twenty Ninety Creative</title>
+  <meta name="description" content="Official GitHub Page for The Town (#🏘️the_town) & The 2090 Club by Twenty Ninety Creative (@twentyninetycreative).The hole has officially started — join the Discord to decide what happens next!" />
+  <meta property="og:title" content="The Town (🏘️the_town) — The 2090 Club" />
+  <meta property="og:description" content="1,900+ Followers in a living 3D crowd simulation by @twentyninetycreative. The hole has officially started! Join The 2090 Club on Discord." />
+  <meta property="og:image" content="assets/hero_banner.jpg" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/png" href="assets/discord_icon.png" />
+  <style>
+    :root {
+      --bg-dark: #0b0f14;
+      --bg-card: #131a22;
+      --bg-elevated: #1b2531;
+      --accent-cream: #ffe9d9;
+      --accent-orange: #ff5a36;
+      --accent-green: #2ee59d;
+      --accent-discord: #5865F2;
+      --accent-ig: #E1306C;
+      --text-main: #f3f6fa;
+      --text-muted: #9ba8b8;
+      --border: rgba(255, 233, 217, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Sticky Navbar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 15, 20, 0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-main);
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand img {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 2px solid var(--accent-orange);
+      object-fit: cover;
+    }
+
+    .brand-badge {
+      background: rgba(46, 229, 157, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(46, 229, 157, 0.35);
+      font-size: 0.72rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-cream);
+    }
+
+    .btn-discord-nav {
+      background: var(--accent-discord);
+      color: #fff !important;
+      padding: 0.55rem 1.1rem;
+      border-radius: 10px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 16px rgba(88, 101, 242, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-discord-nav:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(88, 101, 242, 0.6);
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      padding: 4.5rem 1.5rem 3.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 2.5rem 1.25rem;
+      }
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 90, 54, 0.14);
+      border: 1px solid rgba(255, 90, 54, 0.4);
+      color: #ff8568;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.2rem;
+    }
+
+    .pulse-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.3rem, 5vw, 3.8rem);
+      line-height: 1.08;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.1rem;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(90deg, var(--accent-cream), var(--accent-orange), var(--accent-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1.12rem;
+      margin-bottom: 1.75rem;
+      max-width: 620px;
+    }
+
+    .cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.95rem 1.65rem;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      box-shadow: 0 10px 28px rgba(88, 101, 242, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: transform 0.18s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+    }
+
+    .btn-secondary {
+      background: rgba(225, 48, 108, 0.14);
+      color: #ff7aa8;
+      border: 1px solid rgba(225, 48, 108, 0.4);
+      text-decoration: none;
+      padding: 0.95rem 1.45rem;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(225, 48, 108, 0.25);
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.85rem;
+    }
+
+    @media (max-width: 600px) {
+      .hero-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0.85rem;
+      border-radius: 12px;
+    }
+
+    .stat-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent-cream);
+    }
+
+    .stat-lbl {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Discord Invite Widget Card */
+    .discord-widget {
+      background: linear-gradient(160deg, #181c28 0%, #11151d 100%);
+      border: 2px solid rgba(88, 101, 242, 0.55);
+      border-radius: 22px;
+      padding: 1.65rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .discord-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .discord-header img {
+      width: 68px;
+      height: 68px;
+      border-radius: 18px;
+      border: 2px solid var(--accent-cream);
+    }
+
+    .discord-server-title {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .discord-channel-tag {
+      display: inline-block;
+      margin-top: 0.25rem;
+      background: rgba(88, 101, 242, 0.2);
+      color: #a9b1ff;
+      padding: 0.2rem 0.65rem;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .discord-counts {
+      display: flex;
+      gap: 1.2rem;
+      margin-bottom: 1.15rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .online-indicator {
+      color: var(--accent-green);
+    }
+
+    .member-indicator {
+      color: var(--text-muted);
+    }
+
+    .discord-meta-list {
+      background: rgba(0, 0, 0, 0.32);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+
+    .discord-meta-list div {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .discord-meta-list div:last-child {
+      border-bottom: none;
+    }
+
+    .discord-meta-list strong {
+      color: var(--text-main);
+    }
+
+    .join-full-btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: #23a55a;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 800;
+      padding: 0.95rem;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      transition: background 0.2s;
+      margin-bottom: 0.65rem;
+    }
+
+    .join-full-btn:hover {
+      background: #1d8f4d;
+    }
+
+    .copy-btn {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--accent-cream);
+      border: 1px solid var(--border);
+      padding: 0.65rem;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    /* Container & Sections */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+
+    .section-header {
+      margin-bottom: 2rem;
+    }
+
+    .section-eyebrow {
+      color: var(--accent-orange);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.4rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    /* Featured Reel Section */
+    .reel-showcase {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 1.75rem;
+    }
+
+    @media (max-width: 850px) {
+      .reel-showcase {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .reel-poster-wrap {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid rgba(255, 233, 217, 0.2);
+      background: #000;
+    }
+
+    .reel-poster-wrap img {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .reel-overlay-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(0, 0, 0, 0.78);
+      color: #fff;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .transcript-box {
+      background: var(--bg-elevated);
+      border-left: 4px solid var(--accent-orange);
+      padding: 1.2rem;
+      border-radius: 0 12px 12px 0;
+      margin: 1.25rem 0;
+    }
+
+    .transcript-quote {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent-cream);
+      font-style: italic;
+    }
+
+    .timeline-steps {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .timeline-step {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .time-badge {
+      background: rgba(46, 229, 157, 0.15);
+      color: var(--accent-green);
+      font-family: monospace;
+      font-weight: 800;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    /* Interactive Mini-Game: Dig The Hole */
+    .excavation-game {
+      background: linear-gradient(145deg, #16221c 0%, #121820 100%);
+      border: 2px solid rgba(46, 229, 157, 0.4);
+      border-radius: 22px;
+      padding: 2rem;
+      margin-top: 2.5rem;
+      text-align: center;
+    }
+
+    .progress-bar-outer {
+      width: 100%;
+      max-width: 560px;
+      height: 22px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 999px;
+      margin: 1.2rem auto;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      width: 24%;
+      background: linear-gradient(90deg, #ff5a36, #2ee59d);
+      transition: width 0.25s ease;
+    }
+
+    .dig-btn {
+      background: var(--accent-orange);
+      color: #fff;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 14px;
+      font-size: 1.1rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(255, 90, 54, 0.4);
+      transition: transform 0.1s;
+    }
+
+    .dig-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Citizens Grid */
+    .citizens-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .citizen-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .citizen-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-orange);
+    }
+
+    .citizen-role {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      background: rgba(255, 233, 217, 0.1);
+      color: var(--accent-cream);
+      margin-bottom: 0.6rem;
+    }
+
+    .citizen-card h3 {
+      font-size: 1.15rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .citizen-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Episodes Grid */
+    .episodes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .episode-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .episode-thumb {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .episode-body {
+      padding: 1.25rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .episode-stats {
+      display: flex;
+      gap: 0.85rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 0.75rem 0;
+      font-weight: 600;
+    }
+
+    /* Studio Section */
+    .studio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .studio-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.4rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <a href="#" class="brand">
+      <img src="assets/discord_icon.png" alt="The 2090 Club Icon" />
+      <span>The Town · 2090 Club</span>
+      <span class="brand-badge">#🏘️the_town</span>
+    </a>
+    <div class="nav-links">
+      <a href="#the-hole">The Hole (Reel)</a>
+      <a href="#citizens">Town Census</a>
+      <a href="#episodes">All 6 Episodes</a>
+      <a href="#studio">Twenty Ninety Creative</a>
+      <a href="https://discord.gg/ENa878794" target="_blank" rel="noopener noreferrer" class="btn-discord-nav">
+        <span>Join Discord</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div>
+      <div class="status-pill">
+        <span class="pulse-dot"></span>
+        <span>Live Event: The Hole Has Officially Started</span>
+      </div>
+      <h1>Welcome to <span>The Town</span> by Twenty Ninety Creative</h1>
+      <p class="hero-sub">
+        Every follower spawns as an avatar in a chaotic 3D community simulation. Today, at <strong>1,900+ followers</strong>, the town unlocked a parched Stone Golem who desperately needs water—and thanks to comment <code style="color:var(--accent-cream)">@ashrafabisaid ("DIG A HOLE??")</code>, the excavation crew has begun digging.
+      </p>
+      <div class="cta-group">
+        <a href="https://discord.gg/ENa878794" target="_blank" rel="noopener noreferrer" class="btn-primary">
+          <span>🏘️ Join The 2090 Club on Discord</span>
+        </a>
+        <a href="https://www.instagram.com/reel/DdzIfF2gIDD/?stkn=djh0N3o4dDRmb293" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+          <span>🎬 Watch Reel (DdzIfF2gIDD)</span>
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-box">
+          <div class="stat-val">1,900+</div>
+          <div class="stat-lbl">Town Citizens</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">1,930</div>
+          <div class="stat-lbl">IG Followers</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">1,351+</div>
+          <div class="stat-lbl">Reel Views</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">#🏘️the_town</div>
+          <div class="stat-lbl">Discord Hub</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Official Discord Join Card -->
+    <aside class="discord-widget">
+      <div class="discord-header">
+        <img src="assets/discord_icon.png" alt="The 2090 Club Server Icon" />
+        <div>
+          <div class="discord-server-title">The 2090 Club</div>
+          <span class="discord-channel-tag">#🏘️the_town</span>
+        </div>
+      </div>
+      <div class="discord-counts">
+        <span class="online-indicator">● 9 Online Now</span>
+        <span class="member-indicator">● 26 Town Founders</span>
+      </div>
+      <div class="discord-meta-list">
+        <div><span>Invite Code</span><strong>ENa878794</strong></div>
+        <div><span>Server ID</span><strong>1551909274291011664</strong></div>
+        <div><span>Town Channel ID</span><strong>1551910790532177970</strong></div>
+        <div><span>Invited By</span><strong>Satoru Gojo (@youcef56312)</strong></div>
+        <div><span>Features</span><strong>COMMUNITY · NEWS</strong></div>
+      </div>
+      <a href="https://discord.gg/ENa878794" target="_blank" rel="noopener noreferrer" class="join-full-btn">
+        Accept Invite — Join https://discord.gg/ENa878794
+      </a>
+      <button class="copy-btn" onclick="copyDiscordLink()" id="copyBtn">
+        📋 Copy Invite Link (https://discord.gg/ENa878794)
+      </button>
+    </aside>
+  </header>
+
+  <!-- Featured Reel Breakdown -->
+  <section class="container" id="the-hole">
+    <div class="section-header">
+      <div class="section-eyebrow">Featured Instagram Reel · Shortcode: DdzIfF2gIDD</div>
+      <h2 class="section-title">"the hole has officially started" — Complete Field Report</h2>
+    </div>
+
+    <div class="reel-showcase">
+      <div>
+        <div class="reel-poster-wrap">
+          <span class="reel-overlay-badge">1900 followers</span>
+          <img src="assets/reel_hole_started.jpg" alt="The Hole Has Officially Started Reel Thumbnail" />
+        </div>
+        <div style="margin-top: 1rem;">
+          <img src="assets/reel_frames_grid.jpg" alt="16-Frame Contact Sheet of Reel DdzIfF2gIDD" style="width:100%; border-radius: 12px; border: 1px solid var(--border);" />
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.4rem; text-align: center;">
+            Full 16-Frame Telemetry Capture across the 32.6-second Instagram Reel
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">What Happened in the Reel?</h3>
+        <p style="color: var(--text-muted);">
+          Posted by <strong>@twentyninetycreative</strong> (Twenty Ninety | Games 🎮), this 32.6-second episode chronicles the moment The Town's 1,900 follower avatars rally around a newly unlocked, cracked dry <strong>Stone Golem</strong> lying parched on the grass. Following a top comment from <strong>@ashrafabisaid</strong> asking <em>"DIG A HOLE??"</em>, four tan mannequin citizens grab shovels and begin digging a massive dirt pit to find water.
+        </p>
+
+        <div class="transcript-box">
+          <div style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-orange); font-weight: 800; margin-bottom: 0.35rem;">
+            Verbatim Audio & On-Screen Narration Transcript
+          </div>
+          <div class="transcript-quote">
+            "Yes! He needs water. Digging started. Dig faster, we just got him. TBH unfollowing would be easier."
+          </div>
+        </div>
+
+        <div class="timeline-steps">
+          <div class="timeline-step">
+            <span class="time-badge">0:00 – 0:06</span>
+            <div>
+              <strong>The Request & The Golem's Thirst:</strong> Header reads <code>1900 followers</code>. Comment overlay from <code>ashrafabisaid (21h)</code> asks: <em>"DIG A HOLE??"</em>. The camera pans to the cracked, dry Stone Golem lying on the lawn as the narrator declares: <em>"Yes! He needs water."</em>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <span class="time-badge">0:06 – 0:15</span>
+            <div>
+              <strong>Excavation Crew Mobilizes:</strong> Caption reads <code>digging started</code>. Four tan follower mannequins surround a fresh patch of dark brown soil, rhythmically digging with shovels while custom avatars (including <strong>Satoru Gojo</strong> in the foreground and <strong>Follower 64</strong>) watch.
+            </div>
+          </div>
+          <div class="timeline-step">
+            <span class="time-badge">0:15 – 0:24</span>
+            <div>
+              <strong>Urgency at the Pit:</strong> Caption reads <code>dig faster. we just got him</code>. The dirt mound grows as the crowd of 1,900 followers presses in around the excavation site and the parched Stone Golem.
+            </div>
+          </div>
+          <div class="timeline-step">
+            <span class="time-badge">0:24 – 0:32</span>
+            <div>
+              <strong>Existential Town Humor:</strong> Caption reads <code>tbh unfollowing would be easier</code>—joking that unfollowing the page to shrink the population would be far less exhausting than digging a well by hand.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Hole Digging Simulator -->
+    <div class="excavation-game">
+      <div class="section-eyebrow">Interactive Community Task</div>
+      <h3 style="font-size: 1.6rem; margin-bottom: 0.4rem;">⛏️ Help Dig the Hole for the Stone Golem</h3>
+      <p style="color: var(--text-muted); max-width: 580px; margin: 0 auto;">
+        "Dig faster, we just got him!" Click the shovel below to help the 4-mannequin crew reach the water table—or join <strong>#🏘️the_town</strong> on Discord to vote on what happens to the hole next.
+      </p>
+      <div class="progress-bar-outer">
+        <div class="progress-bar-inner" id="holeProgress"></div>
+      </div>
+      <p id="holeStatusText" style="font-weight: 700; color: var(--accent-cream); margin-bottom: 1.1rem;">
+        Hole Depth: 2.4m / 10.0m · Stone Golem Hydration: 24%
+      </p>
+      <button class="dig-btn" onclick="digShovel()">🪨 Shovel Dirt (+0.8m Depth)</button>
+    </div>
+  </section>
+
+  <!-- Town Citizens & Census -->
+  <section class="container" id="citizens">
+    <div class="section-header">
+      <div class="section-eyebrow">In-World Telemetry · 1,900+ Avatars</div>
+      <h2 class="section-title">Notable Citizens & Avatars Spotted in The Town</h2>
+    </div>
+
+    <div class="citizens-grid">
+      <div class="citizen-card">
+        <span class="citizen-role">Discord Inviter & Foreground Icon</span>
+        <h3>Satoru Gojo (@youcef56312)</h3>
+        <p>Spotted directly in the foreground of the Reel with spiky white hair and signature black blindfold; also the official inviter for The 2090 Club Discord link.</p>
+      </div>
+      <div class="citizen-card">
+        <span class="citizen-role">Centerpiece Entity</span>
+        <h3>The Parched Stone Golem</h3>
+        <p>A cracked, dry earth-and-stone golem lying on the grass who desperately needs water. The entire hole-digging operation was launched to save him.</p>
+      </div>
+      <div class="citizen-card">
+        <span class="citizen-role">Hole Architect</span>
+        <h3>@ashrafabisaid</h3>
+        <p>Left the legendary comment <em>"DIG A HOLE??"</em> featured at the start of Reel DdzIfF2gIDD, officially kicking off The Town's excavation era.</p>
+      </div>
+      <div class="citizen-card">
+        <span class="citizen-role">Placard Citizen</span>
+        <h3>Follower 64</h3>
+        <p>An early-era town inhabitant prominently marked with the floating in-world placard <code>Follower 64</code> right beside the excavation crew.</p>
+      </div>
+      <div class="citizen-card">
+        <span class="citizen-role">Excavation Squad</span>
+        <h3>The 4 Hole Diggers</h3>
+        <p>Four tireless tan mannequins armed with shovels, digging into the green lawn on loop while the narrator tells them to dig faster.</p>
+      </div>
+      <div class="citizen-card">
+        <span class="citizen-role">Town Authority</span>
+        <h3>The Management</h3>
+        <p>Introduced in Episode 5 (<em>"meet the management"</em>)—crowned and bespectacled figures who oversee crowd decisions and Discord votes.</p>
+      </div>
+      <div class="citizen-card">
+        <span class="citizen-role">Persistent Petitioner</span>
+        <h3>@._fallen_seraphim._</h3>
+        <p>Featured in Episode 2's comment box: <em>"day 4 asking to be a biblically accurate angel"</em> while the town was at 1,879 followers.</p>
+      </div>
+      <div class="citizen-card">
+        <span class="citizen-role">Custom Skins & Wildlife</span>
+        <h3>Triceratops, Samurai & Co.</h3>
+        <p>Includes the Green Frog-Hat citizen, Japanese Samurai armor warrior, Crowned Red-Cape King, Green Triceratops, Yellow-Haired Spider, Real Madrid jersey player, White Duck, Horse, Dog, Black Cat, and Monkey.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- All 6 Episodes Archive -->
+  <section class="container" id="episodes">
+    <div class="section-header">
+      <div class="section-eyebrow">Complete Series Chronicle · @twentyninetycreative</div>
+      <h2 class="section-title">All 6 Episodes of "The Town"</h2>
+    </div>
+
+    <div class="episodes-grid">
+      <article class="episode-card">
+        <img src="assets/reel_hole_started.jpg" alt="Episode 6: the hole has officially started" class="episode-thumb" />
+        <div class="episode-body">
+          <div>
+            <span class="citizen-role">Latest · Reel DdzIfF2gIDD</span>
+            <h3>"the hole has officially started"</h3>
+            <div class="episode-stats">
+              <span>👥 1,900 Followers</span>
+              <span>👁️ 1,351 Views</span>
+              <span>❤️ 79</span>
+              <span>💬 61</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              Triggered by @ashrafabisaid's "DIG A HOLE??" comment. Four mannequins excavate a pit to find water for the cracked Stone Golem.
+            </p>
+          </div>
+          <a href="https://www.instagram.com/reel/DdzIfF2gIDD/" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="margin-top: 1rem; justify-content: center;">Watch on Instagram ↗</a>
+        </div>
+      </article>
+
+      <article class="episode-card">
+        <img src="assets/reel_management.jpg" alt="Episode 5: meet the management" class="episode-thumb" />
+        <div class="episode-body">
+          <div>
+            <span class="citizen-role">Episode 5 · Reel DdwuRx1gm84</span>
+            <h3>"meet the management."</h3>
+            <div class="episode-stats">
+              <span>👥 1,900 Followers</span>
+              <span>👁️ 1,207 Views</span>
+              <span>❤️ 91</span>
+              <span>💬 29</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              "meet the management. apparently we’re digging a hole next. join the discord if you want to help decide what happens with the hole...link in bio"
+            </p>
+          </div>
+          <a href="https://www.instagram.com/reel/DdwuRx1gm84/" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="margin-top: 1rem; justify-content: center;">Watch on Instagram ↗</a>
+        </div>
+      </article>
+
+      <article class="episode-card">
+        <img src="assets/reel_deflated.jpg" alt="Episode 4: it deflated a little" class="episode-thumb" />
+        <div class="episode-body">
+          <div>
+            <span class="citizen-role">Episode 4 · Reel DdwXvinAOSG</span>
+            <h3>"it deflated a little."</h3>
+            <div class="episode-stats">
+              <span>👥 1,900 Followers</span>
+              <span>👁️ 1,302 Views</span>
+              <span>❤️ 99</span>
+              <span>💬 39</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              "it deflated a little. take your requests to Discord. apparently it works." Features the massive crowd, monkey, and green frog-hat citizen.
+            </p>
+          </div>
+          <a href="https://www.instagram.com/reel/DdwXvinAOSG/" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="margin-top: 1rem; justify-content: center;">Watch on Instagram ↗</a>
+        </div>
+      </article>
+
+      <article class="episode-card">
+        <img src="assets/reel_skateable.jpg" alt="Episode 3: he's skateable" class="episode-thumb" />
+        <div class="episode-body">
+          <div>
+            <span class="citizen-role">Episode 3 · Reel DduAOTSgx_t</span>
+            <h3>"he’s skateable"</h3>
+            <div class="episode-stats">
+              <span>👥 1,900 Followers</span>
+              <span>👁️ 1,833 Views</span>
+              <span>❤️ 81</span>
+              <span>💬 52</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              Chaotic physics experiment in the town featuring Real Madrid jersey avatar, dog, black cat, and skateable town geometry.
+            </p>
+          </div>
+          <a href="https://www.instagram.com/reel/DduAOTSgx_t/" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="margin-top: 1rem; justify-content: center;">Watch on Instagram ↗</a>
+        </div>
+      </article>
+
+      <article class="episode-card">
+        <img src="assets/reel_not_again.jpg" alt="Episode 2: we're not doing that again" class="episode-thumb" />
+        <div class="episode-body">
+          <div>
+            <span class="citizen-role">Episode 2 · Reel DdrdkfrgeHW</span>
+            <h3>"we’re not doing that again"</h3>
+            <div class="episode-stats">
+              <span>👥 1,879 Followers</span>
+              <span>👁️ 2,193 Views</span>
+              <span>❤️ 128</span>
+              <span>💬 57</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              Recorded at 1,879 followers. Highlights @._fallen_seraphim._'s comment: "day 4 asking to be a biblically accurate angel".
+            </p>
+          </div>
+          <a href="https://www.instagram.com/reel/DdrdkfrgeHW/" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="margin-top: 1rem; justify-content: center;">Watch on Instagram ↗</a>
+        </div>
+      </article>
+
+      <article class="episode-card">
+        <img src="assets/reel_spider.jpg" alt="Episode 1: we had a spider available" class="episode-thumb" />
+        <div class="episode-body">
+          <div>
+            <span class="citizen-role">Episode 1 · Reel DdpFP83gCDd</span>
+            <h3>"we had a spider available."</h3>
+            <div class="episode-stats">
+              <span>👥 1,840 Followers</span>
+              <span>👁️ 1,823 Views</span>
+              <span>❤️ 116</span>
+              <span>💬 62</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              "we had a spider available. the town has a Discord now. link in bio." Features samurai armor, king with cape, duck, and spider creature.
+            </p>
+          </div>
+          <a href="https://www.instagram.com/reel/DdpFP83gCDd/" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="margin-top: 1rem; justify-content: center;">Watch on Instagram ↗</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- About Twenty Ninety Creative -->
+  <section class="container" id="studio">
+    <div class="section-header">
+      <div class="section-eyebrow">The Creators Behind The Town · twentyninetycreative.com</div>
+      <h2 class="section-title">Twenty Ninety Creative ("We craft worlds worth exploring.")</h2>
+    </div>
+    <p style="color: var(--text-muted); max-width: 820px;">
+      <strong>Twenty Ninety Creative</strong> (<code>@twentyninetycreative</code>) is an independent game development studio based in Saudi Arabia with an office in Toronto, Canada. Inspired by 1990s gaming, their philosophy is simple: <em>"We don't rush worlds. We let them unfold. Curiosity comes first. Rules come later."</em>
+    </p>
+
+    <div class="studio-grid">
+      <div class="studio-card">
+        <span class="citizen-role">Studio Leadership</span>
+        <h3>The Team</h3>
+        <p style="color: var(--text-muted); margin-top: 0.4rem;">
+          • <strong>Melisa Cetinalp</strong> — CEO<br/>
+          • <strong>Deniz Cetinalp</strong> — CTO<br/>
+          • <strong>Renad Alharbi</strong> — COO
+        </p>
+      </div>
+      <div class="studio-card">
+        <span class="citizen-role">1–4 Player Co-Op</span>
+        <h3>Traversal Adventure</h3>
+        <p style="color: var(--text-muted); margin-top: 0.4rem;">
+          Dig, climb, and crawl through procedural ecosystems in a living forest full of discoveries, hazards, and unforgettable climbs.
+        </p>
+      </div>
+      <div class="studio-card">
+        <span class="citizen-role">Audio-Reactive Action</span>
+        <h3>Becoming You</h3>
+        <p style="color: var(--text-muted); margin-top: 0.4rem;">
+          An action game where real-time music analysis shapes movement, camera, combat, enemies, VFX, and procedural boss encounters.
+        </p>
+      </div>
+      <div class="studio-card">
+        <span class="citizen-role">Exploration Adventure</span>
+        <h3>Moonfall Voyage</h3>
+        <p style="color: var(--text-muted); margin-top: 0.4rem;">
+          Sail across a broken realm to free colossal guardians from a powerful curse through sailing challenges and ancient puzzles.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p style="font-size: 1.05rem; font-weight: 800; color: var(--accent-cream); margin-bottom: 0.5rem;">
+      Ready to shape what happens with The Hole in #🏘️the_town?
+    </p>
+    <p style="margin-bottom: 1.25rem;">
+      Join <strong>The 2090 Club</strong> on Discord: <a href="https://discord.gg/ENa878794" target="_blank" rel="noopener noreferrer" style="color: var(--accent-green); font-weight: 800;">https://discord.gg/ENa878794</a>
+    </p>
+    <p style="font-size: 0.82rem;">
+      Community GitHub Page for <strong>The Town / The 2090 Club</strong> · Source Reel: <a href="https://www.instagram.com/reel/DdzIfF2gIDD/?stkn=djh0N3o4dDRmb293" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted);">instagram.com/reel/DdzIfF2gIDD</a> · Studio: <a href="https://twentyninetycreative.com" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted);">twentyninetycreative.com</a>
+    </p>
+  </footer>
+
+  <script>
+    let depth = 2.4;
+    function digShovel() {
+      depth = Math.min(10.0, +(depth + 0.8).toFixed(1));
+      const pct = Math.min(100, Math.round((depth / 10.0) * 100));
+      document.getElementById('holeProgress').style.width = pct + '%';
+      const statusEl = document.getElementById('holeStatusText');
+      if (depth >= 10.0) {
+        statusEl.textContent = '💧 WATER REACHED! Depth: 10.0m / 10.0m · The Stone Golem is 100% Hydrated! Join Discord to vote on the next project!';
+      } else {
+        statusEl.textContent = `Hole Depth: ${depth.toFixed(1)}m / 10.0m · Stone Golem Hydration: ${pct}% ("Dig faster, we just got him!")`;
+      }
+    }
+
+    function copyDiscordLink() {
+      const link = 'https://discord.gg/ENa878794';
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(link);
+      }
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✅ Copied https://discord.gg/ENa878794 to Clipboard!';
+      setTimeout(() => {
+        btn.textContent = '📋 Copy Invite Link (https://discord.gg/ENa878794)';
+      }, 2500);
+    }
+  </script>
+</body>
+</html>
