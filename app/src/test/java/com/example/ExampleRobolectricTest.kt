@@ -2,7 +2,7 @@ package com.example
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.example.data.model.TownRepositoryData
+import com.example.data.model.DjezzyOusimRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -18,17 +18,16 @@ class ExampleRobolectricTest {
     fun `read string from context`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val appName = context.getString(R.string.app_name)
-        assertEquals("The 2090 Town", appName)
-        assertEquals("https://discord.gg/ENa878794", context.getString(R.string.discord_invite_url))
+        assertEquals("OUSIM Bot Djezzy", appName)
+        assertEquals("Youcef Ouagead", context.getString(R.string.creator_name))
     }
 
     @Test
-    fun `verify town repository has reel and discord telemetry`() {
-        assertEquals("https://discord.gg/ENa878794", TownRepositoryData.DISCORD_JOIN_URL)
-        assertEquals("The 2090 Club", TownRepositoryData.discordInfo.serverName)
-        assertEquals(6, TownRepositoryData.allEpisodes.size)
-        assertTrue(TownRepositoryData.allEpisodes.any { it.shortcode == "DdzIfF2gIDD" })
-        assertTrue(TownRepositoryData.initialCitizens.any { it.name.contains("Satoru Gojo") })
-        assertTrue(TownRepositoryData.initialCitizens.any { it.name.contains("Stone Golem") })
+    fun `verify djezzy ousim repository offers and creator`() {
+        assertEquals("Youcef Ouagead", DjezzyOusimRepository.CREATOR_NAME)
+        assertTrue(DjezzyOusimRepository.allOffers.isNotEmpty())
+        assertTrue(DjezzyOusimRepository.allOffers.any { it.id == "ousim_2gb_welcome" })
+        assertTrue(DjezzyOusimRepository.allOffers.any { it.id == "hayla_bezzef_1500" })
+        assertTrue(DjezzyOusimRepository.ussdCodes.any { it.code == "*710#" })
     }
 }

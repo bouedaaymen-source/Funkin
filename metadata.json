@@ -1,6 +1,6 @@
 {
-  "name": "The 2090 Town",
-  "description": "Official GitHub Page, episode archive, citizen census, and Discord join portal for The Town (#the_town / The 2090 Club) by Twenty Ninety Creative.",
+  "name": "OUSIM Bot Djezzy",
+  "description": "Smart Djezzy SIM & Internet Offers Bot Assistant by Youcef Ouagead. Activate internet bundles, track Walk & Win steps, and dial official USSD codes.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

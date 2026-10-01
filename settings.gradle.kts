@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "The 2090 Town"
+rootProject.name = "OUSIM Bot Djezzy"
 
 include(":app")
